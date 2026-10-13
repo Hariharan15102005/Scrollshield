@@ -24,32 +24,59 @@
       <!-- Status Card -->
       <section class="card status-card" aria-labelledby="status-title">
         <div class="status-header">
-          <span class="status-indicator-dot" aria-hidden="true"></span>
-          <h2 id="status-title" class="status-title">Setup in progress</h2>
-          <span class="status-badge" aria-label="Development stage: Phase 1">Phase 1</span>
+          <span id="status-indicator-dot" class="status-indicator-dot active" aria-hidden="true"></span>
+          <h2 id="status-title" class="status-title">Shield Active</h2>
+          <span class="status-badge" aria-label="Development stage: Phase 2">Phase 2</span>
         </div>
-        <p class="status-description">
-          The foundation of ScrollShield is active. Blocking rules and tracking engines are intentionally not enabled in this foundation phase.
+        <p id="status-description" class="status-description">
+          YouTube Shorts blocking is active. Regular videos, subscriptions, and search remain accessible.
         </p>
       </section>
 
-      <!-- Planned Features Preview -->
+      <!-- Active Controls Card -->
+      <section class="card controls-card" aria-labelledby="controls-heading">
+        <h2 id="controls-heading" class="section-title">Active Controls</h2>
+        
+        <div class="control-row">
+          <div class="control-info">
+            <span class="control-label" id="label-youtube-shorts">YouTube Shorts Blocker</span>
+            <span class="control-hint">Block /shorts routes &amp; hide shelves</span>
+          </div>
+          <div class="switch-wrapper">
+            <input
+              type="checkbox"
+              id="toggle-youtube-shorts"
+              class="switch-input"
+              role="switch"
+              aria-checked="true"
+              aria-labelledby="label-youtube-shorts"
+              checked
+            >
+            <label for="toggle-youtube-shorts" class="switch-track">
+              <span class="switch-thumb" aria-hidden="true"></span>
+            </label>
+          </div>
+        </div>
+
+        <div id="save-error-message" class="error-banner" role="alert" hidden>
+          Failed to save settings. Please try again.
+        </div>
+      </section>
+
+      <!-- Roadmap Card -->
       <section class="card roadmap-card" aria-labelledby="planned-features-title">
-        <h2 id="planned-features-title" class="section-title">Planned Features</h2>
-        <p class="section-subtitle">Roadmap items arriving in upcoming phases:</p>
+        <h2 id="planned-features-title" class="section-title">Feature Status &amp; Roadmap</h2>
 
         <ul class="feature-list" role="list">
-          <li class="feature-item">
+          <li class="feature-item feature-item-active">
             <div class="feature-bullet" aria-hidden="true">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="12" y1="8" x2="12" y2="12"></line>
-                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                <polyline points="20 6 9 17 4 12"></polyline>
               </svg>
             </div>
             <div class="feature-details">
-              <span class="feature-name">YouTube Shorts Blocking</span>
-              <span class="feature-meta">Planned · Target short-form feeds while keeping videos</span>
+              <span class="feature-name">YouTube Shorts Blocker</span>
+              <span class="feature-meta">Active · Routes blocked &amp; shelves suppressed</span>
             </div>
           </li>
 
@@ -62,8 +89,8 @@
               </svg>
             </div>
             <div class="feature-details">
-              <span class="feature-name">Instagram Reels Blocking</span>
-              <span class="feature-meta">Planned · Block infinite reels while preserving Direct Messages</span>
+              <span class="feature-name">Instagram Reels Blocker</span>
+              <span class="feature-meta">Planned (Phase 3) · Block reels while preserving DMs</span>
             </div>
           </li>
 
@@ -76,8 +103,8 @@
               </svg>
             </div>
             <div class="feature-details">
-              <span class="feature-name">Daily Time Budgets</span>
-              <span class="feature-meta">Planned · Configurable limits with reflective pause check</span>
+              <span class="feature-name">Mindful Reflection Prompts</span>
+              <span class="feature-meta">Planned (Phase 3) · Pre-access intention checks</span>
             </div>
           </li>
 
@@ -90,8 +117,8 @@
               </svg>
             </div>
             <div class="feature-details">
-              <span class="feature-name">Focus Schedules</span>
-              <span class="feature-meta">Planned · Automated distraction-free focus intervals</span>
+              <span class="feature-name">Daily Budgets &amp; Focus Schedules</span>
+              <span class="feature-meta">Planned (Phase 4) · Scheduled distraction blocks</span>
             </div>
           </li>
         </ul>
@@ -112,10 +139,10 @@
     <footer class="popup-footer">
       <div class="footer-left">
         <span class="version-label">Version:</span>
-        <span id="extension-version" class="version-value">v0.1.0</span>
+        <span id="extension-version" class="version-value">v0.2.0</span>
       </div>
       <div class="footer-right">
-        <span class="stage-tag">Phase 1: Foundation</span>
+        <span class="stage-tag">Phase 2: YouTube Shield</span>
       </div>
     </footer>
   </div>

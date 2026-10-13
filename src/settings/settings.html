@@ -39,94 +39,112 @@
         <section class="page-header" aria-labelledby="page-title">
           <h1 id="page-title" class="page-title">Settings</h1>
           <p class="page-lead">
-            Manage your digital boundaries, selective content filters, and mindful reflection prompts.
+            Manage your digital boundaries, selective content filters, and focus controls.
           </p>
         </section>
 
         <!-- Development Stage Callout -->
-        <section class="callout callout-amber" aria-labelledby="stage-notice-title">
+        <section class="callout callout-emerald" aria-labelledby="stage-notice-title">
           <div class="callout-icon" aria-hidden="true">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"></circle>
-              <line x1="12" y1="8" x2="12" y2="12"></line>
-              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
             </svg>
           </div>
           <div class="callout-body">
-            <h2 id="stage-notice-title" class="callout-heading">Phase 1: Project Foundation Active</h2>
+            <h2 id="stage-notice-title" class="callout-heading">Phase 2: YouTube Shorts Shield Active</h2>
             <p class="callout-text">
-              Active configuration controls and toggles are deliberately withheld in this foundation release.
-              ScrollShield does not display inert or misleading toggles. The controls previewed below outline the
-              exact functionality coming in upcoming phases.
+              Selective blocking for YouTube Shorts is functional and configurable below.
+              Instagram Reels filtering, reflective intervention prompts, and usage budgets are scheduled for upcoming phases.
             </p>
           </div>
         </section>
 
-        <!-- Planned Controls List -->
-        <section class="settings-section" aria-labelledby="planned-controls-title">
-          <h2 id="planned-controls-title" class="section-heading">Planned Configuration Controls</h2>
+        <!-- Configuration Controls & Roadmap -->
+        <section class="settings-section" aria-labelledby="platform-controls-title">
+          <h2 id="platform-controls-title" class="section-heading">Platform Filters</h2>
           <p class="section-description">
-            The following controls are scheduled for implementation in Phase 2 and subsequent releases:
+            Configure selective blocking rules for short-form addictive loops while preserving essential communication and long-form video.
           </p>
 
           <div class="controls-grid">
-            <!-- Planned Control 1 -->
-            <article class="control-card">
+            <!-- Active Control: YouTube Shorts Blocker -->
+            <article class="control-card control-card-active">
               <div class="control-header">
-                <div class="control-badge">Upcoming</div>
-                <h3 class="control-name">Selective Platform Filtering</h3>
+                <span class="control-badge badge-active">Active</span>
+                <h3 class="control-name" id="heading-yt-shorts">YouTube Shorts Blocker</h3>
               </div>
               <p class="control-desc">
-                Granular filtering that suppresses high-friction dopamine loops while preserving essential features.
+                Suppresses YouTube Shorts video player routes, hides Shorts shelves on homepage, subscriptions, and search, while keeping normal videos completely functional.
+              </p>
+
+              <div class="toggle-control-box">
+                <div class="toggle-control-info">
+                  <span class="toggle-label" id="label-settings-yt-shorts">Enable Shorts Blocking</span>
+                  <span class="toggle-subtext" id="status-toggle-yt-shorts">Currently blocking Shorts</span>
+                </div>
+                <div class="switch-wrapper">
+                  <input
+                    type="checkbox"
+                    id="settings-toggle-youtube-shorts"
+                    class="switch-input"
+                    role="switch"
+                    aria-checked="true"
+                    aria-labelledby="label-settings-yt-shorts"
+                    checked
+                  >
+                  <label for="settings-toggle-youtube-shorts" class="switch-track">
+                    <span class="switch-thumb" aria-hidden="true"></span>
+                  </label>
+                </div>
+              </div>
+
+              <div id="settings-save-error" class="error-banner" role="alert" hidden>
+                Failed to update settings. Please try again.
+              </div>
+            </article>
+
+            <!-- Planned Control: Instagram Reels -->
+            <article class="control-card">
+              <div class="control-header">
+                <span class="control-badge badge-planned">Planned · Phase 3</span>
+                <h3 class="control-name">Instagram Reels Blocker</h3>
+              </div>
+              <p class="control-desc">
+                Will suppress infinite reels surfaces and exploration grids while preserving Direct Messages (DMs) and feed posts.
               </p>
               <ul class="control-specs">
-                <li><strong>YouTube:</strong> Block Shorts feed & reels player while preserving search, long-form videos, and subscriptions.</li>
-                <li><strong>Instagram:</strong> Block Reels surface and explore video grid while leaving Direct Messages (DMs) accessible.</li>
+                <li><strong>Scope:</strong> Block /reels/ while preserving /direct/.</li>
+                <li><strong>State:</strong> Planned for Phase 3 release.</li>
               </ul>
             </article>
 
-            <!-- Planned Control 2 -->
+            <!-- Planned Control: Reflective Intervention Prompts -->
             <article class="control-card">
               <div class="control-header">
-                <div class="control-badge">Upcoming</div>
-                <h3 class="control-name">Reflective Intervention Prompts</h3>
+                <span class="control-badge badge-planned">Planned · Phase 3</span>
+                <h3 class="control-name">Reflective Interventions</h3>
               </div>
               <p class="control-desc">
-                Mindful interstitial checkpoints designed to interrupt subconscious scrolling triggers.
+                Mindful interstitial checkpoints designed to interrupt subconscious scrolling triggers with a custom intention prompt.
               </p>
               <ul class="control-specs">
-                <li><strong>Custom Questions:</strong> Configure personal reflection prompts before accessing target URLs.</li>
-                <li><strong>Intervention Delay:</strong> Set an intentional pause duration (5 to 30 seconds) before proceeding.</li>
+                <li><strong>Custom Prompts:</strong> Thoughtful reflection questions.</li>
+                <li><strong>Pause Timer:</strong> 5 to 30 second mindful friction.</li>
               </ul>
             </article>
 
-            <!-- Planned Control 3 -->
+            <!-- Planned Control: Daily Budgets & Schedules -->
             <article class="control-card">
               <div class="control-header">
-                <div class="control-badge">Upcoming</div>
-                <h3 class="control-name">Daily Usage Budgets</h3>
+                <span class="control-badge badge-planned">Planned · Phase 4</span>
+                <h3 class="control-name">Budgets &amp; Focus Schedules</h3>
               </div>
               <p class="control-desc">
-                Time-capped allowances for selected recreational web platforms.
+                Time-capped allowances for selected recreational platforms and automated distraction lockouts during deep work blocks.
               </p>
               <ul class="control-specs">
-                <li><strong>Budget Allocation:</strong> Daily caps per service or pooled across all distraction targets.</li>
-                <li><strong>Gentle Warnings:</strong> Visual reminders when approaching 80% and 100% of daily allotment.</li>
-              </ul>
-            </article>
-
-            <!-- Planned Control 4 -->
-            <article class="control-card">
-              <div class="control-header">
-                <div class="control-badge">Upcoming</div>
-                <h3 class="control-name">Focus Schedules & Quiet Blocks</h3>
-              </div>
-              <p class="control-desc">
-                Automated scheduling to lock down distracting surfaces during deep work intervals.
-              </p>
-              <ul class="control-specs">
-                <li><strong>Workday Schedules:</strong> Define active days and time windows (e.g. 09:00 - 17:00).</li>
-                <li><strong>Strict Mode:</strong> Disallow manual overrides during active focus periods.</li>
+                <li><strong>Budgets:</strong> Daily viewing quotas with warning alerts.</li>
+                <li><strong>Focus Blocks:</strong> Automated workday quiet intervals.</li>
               </ul>
             </article>
           </div>
@@ -134,7 +152,7 @@
 
         <!-- Privacy & Storage Architecture Notice -->
         <section class="settings-section" aria-labelledby="architecture-title">
-          <h2 id="architecture-title" class="section-heading">Data Privacy & Architecture</h2>
+          <h2 id="architecture-title" class="section-heading">Data Privacy &amp; Architecture</h2>
           <div class="info-card">
             <p>
               ScrollShield adheres to a zero-telemetry, offline-first philosophy:
@@ -142,7 +160,7 @@
             <ul class="info-list">
               <li>All configurations and metrics are stored strictly on your device via Chrome's local storage.</li>
               <li>No external servers, tracking scripts, third-party analytics, or remote API endpoints.</li>
-              <li>Minimal permissions: permissions are requested only when concrete functionality strictly requires them.</li>
+              <li>Minimal permissions: only the "storage" permission is requested to persist your focus preferences.</li>
             </ul>
           </div>
         </section>
@@ -165,7 +183,7 @@
       <div class="footer-inner">
         <p class="footer-copy">ScrollShield &bull; Take Control. Keep What Matters.</p>
         <p class="footer-meta">
-          <span id="settings-version">Version 0.1.0</span> &bull; Manifest V3
+          <span id="settings-version">Version 0.2.0</span> &bull; Manifest V3
         </p>
       </div>
     </footer>

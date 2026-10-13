@@ -43,7 +43,7 @@ function verifyPngFile(relativePath, expectedDimensions = null) {
   }
 }
 
-test('ScrollShield Phase 1 Manifest & Project Foundation', async (t) => {
+test('ScrollShield Phase 2 Manifest & Security Specifications', async (t) => {
   const manifestPath = path.resolve(rootDir, 'manifest.json');
 
   await t.test('manifest.json exists and parses successfully', () => {
@@ -68,8 +68,9 @@ test('ScrollShield Phase 1 Manifest & Project Foundation', async (t) => {
     assert.match(
       manifest.version,
       /^\d+\.\d+\.\d+$/,
-      'version must follow semantic versioning (e.g. 0.1.0)'
+      'version must follow semantic versioning (e.g. 0.2.0)'
     );
+    assert.strictEqual(manifest.version, '0.2.0');
   });
 
   await t.test('action popup path exists on disk', () => {
@@ -108,32 +109,49 @@ test('ScrollShield Phase 1 Manifest & Project Foundation', async (t) => {
     }
   });
 
-  await t.test('no unnecessary permissions or host_permissions are declared', () => {
-    if (manifest.permissions) {
-      assert.ok(
-        Array.isArray(manifest.permissions) && manifest.permissions.length === 0,
-        'Phase 1 must not request any permissions'
-      );
-    }
+  await t.test('permissions declares strictly and only "storage"', () => {
+    assert.ok(Array.isArray(manifest.permissions), 'permissions must be an array');
+    assert.deepStrictEqual(
+      manifest.permissions,
+      ['storage'],
+      'Only "storage" permission should be requested in Phase 2'
+    );
+  });
+
+  await t.test('no broad host_permissions are declared', () => {
     if (manifest.host_permissions) {
       assert.ok(
         Array.isArray(manifest.host_permissions) && manifest.host_permissions.length === 0,
-        'Phase 1 must not declare any host_permissions'
+        'Phase 2 must not declare host_permissions'
       );
     }
   });
 
-  await t.test('no background worker or content scripts are declared in Phase 1', () => {
+  await t.test('no background worker is declared in Phase 2', () => {
     assert.strictEqual(
       manifest.background,
       undefined,
-      'Phase 1 must not declare background service worker'
+      'Phase 2 must not declare a background service worker'
     );
-    assert.strictEqual(
-      manifest.content_scripts,
-      undefined,
-      'Phase 1 must not declare content_scripts'
-    );
+  });
+
+  await t.test('content_scripts is declared exclusively for YouTube', () => {
+    assert.ok(Array.isArray(manifest.content_scripts), 'content_scripts must be an array');
+    assert.strictEqual(manifest.content_scripts.length, 1);
+
+    const ytScript = manifest.content_scripts[0];
+    assert.deepStrictEqual(ytScript.matches, ['*://*.youtube.com/*']);
+    assert.ok(Array.isArray(ytScript.js));
+    assert.strictEqual(ytScript.js[0], 'src/content/youtube.bundle.js');
+    assert.strictEqual(ytScript.run_at, 'document_start');
+
+    // Verify bundle file exists and is non-empty
+    const bundleFullPath = path.resolve(rootDir, ytScript.js[0]);
+    assert.ok(fs.existsSync(bundleFullPath), 'youtube.bundle.js must exist on disk');
+    const content = fs.readFileSync(bundleFullPath, 'utf8');
+    assert.ok(content.length > 500, 'Bundle must be populated');
+    // Ensure no ES module export/import syntax in classic content script bundle
+    assert.doesNotMatch(content, /\bexport\s+(default|function|const|let)\b/);
   });
 
   await t.test('popup companion files (html, css, js) all exist', () => {
@@ -148,5 +166,14 @@ test('ScrollShield Phase 1 Manifest & Project Foundation', async (t) => {
     assert.ok(fs.existsSync(path.join(settingsDir, 'settings.html')), 'settings.html exists');
     assert.ok(fs.existsSync(path.join(settingsDir, 'settings.css')), 'settings.css exists');
     assert.ok(fs.existsSync(path.join(settingsDir, 'settings.js')), 'settings.js exists');
+  });
+
+  await t.test('common and content source files all exist', () => {
+    assert.ok(fs.existsSync(path.resolve(rootDir, 'src/common/settings.js')));
+    assert.ok(fs.existsSync(path.resolve(rootDir, 'src/content/youtube/route-detector.js')));
+    assert.ok(fs.existsSync(path.resolve(rootDir, 'src/content/youtube/selectors.js')));
+    assert.ok(fs.existsSync(path.resolve(rootDir, 'src/content/youtube/blocker-overlay.js')));
+    assert.ok(fs.existsSync(path.resolve(rootDir, 'src/content/youtube/navigation-monitor.js')));
+    assert.ok(fs.existsSync(path.resolve(rootDir, 'src/content/youtube/index.js')));
   });
 });

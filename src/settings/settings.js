@@ -1,9 +1,12 @@
 /**
- * ScrollShield - Settings Script (Phase 1)
- * Handles version display and window close action.
+ * ScrollShield - Settings Script (Phase 2)
+ * Handles version display, YouTube Shorts settings management,
+ * and page navigation.
  */
 
-const FALLBACK_VERSION = '0.1.0';
+import { getSettings, setSetting, STORAGE_KEYS } from '../common/settings.js';
+
+const FALLBACK_VERSION = '0.2.0';
 
 /**
  * Safely resolves and displays the extension version from manifest.
@@ -28,17 +31,71 @@ function initializeVersion() {
 }
 
 /**
+ * Updates status text underneath the settings toggle.
+ * @param {boolean} isEnabled
+ */
+function updateToggleSubtext(isEnabled) {
+  const subtext = document.getElementById('status-toggle-yt-shorts');
+  if (!subtext) return;
+
+  if (isEnabled) {
+    subtext.textContent = 'Currently blocking Shorts';
+    subtext.style.color = '#a7f3d0';
+  } else {
+    subtext.textContent = 'Shorts blocking paused';
+    subtext.style.color = '#fbbf24';
+  }
+}
+
+/**
+ * Initializes the YouTube Shorts settings toggle and persists changes.
+ */
+async function initializeSettingsToggle() {
+  const toggle = /** @type {HTMLInputElement | null} */ (
+    document.getElementById('settings-toggle-youtube-shorts')
+  );
+  const errorMsg = document.getElementById('settings-save-error');
+  if (!toggle) return;
+
+  try {
+    const settings = await getSettings();
+    toggle.checked = settings.youtubeShortsEnabled;
+    toggle.setAttribute('aria-checked', String(settings.youtubeShortsEnabled));
+    updateToggleSubtext(settings.youtubeShortsEnabled);
+  } catch {
+    toggle.checked = true;
+    toggle.setAttribute('aria-checked', 'true');
+    updateToggleSubtext(true);
+  }
+
+  toggle.addEventListener('change', async () => {
+    const isChecked = toggle.checked;
+    toggle.setAttribute('aria-checked', String(isChecked));
+    updateToggleSubtext(isChecked);
+    if (errorMsg) errorMsg.hidden = true;
+
+    try {
+      await setSetting(STORAGE_KEYS.YOUTUBE_SHORTS_ENABLED, isChecked);
+    } catch {
+      // Revert if saving failed
+      toggle.checked = !isChecked;
+      toggle.setAttribute('aria-checked', String(!isChecked));
+      updateToggleSubtext(!isChecked);
+      if (errorMsg) errorMsg.hidden = false;
+    }
+  });
+}
+
+/**
  * Handles close button action.
- * Closes the tab if possible, or navigates back in browser history.
  */
 function handleClosePage() {
   try {
     window.close();
   } catch {
-    // Some browser contexts restrict window.close() for script-opened tabs
+    // Some browser contexts restrict window.close()
   }
 
-  // If window didn't close (e.g. user navigated directly to the page)
   if (!window.closed && window.history.length > 1) {
     window.history.back();
   }
@@ -49,6 +106,7 @@ function handleClosePage() {
  */
 function init() {
   initializeVersion();
+  initializeSettingsToggle().catch(() => {});
 
   const closeButton = document.getElementById('close-settings-btn');
   if (closeButton) {

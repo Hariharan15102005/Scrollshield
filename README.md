@@ -25,38 +25,78 @@ ScrollShield introduces **surgical, selective filtering**:
 
 ---
 
-## 3. Implementation Status: Phase 1 vs. Planned Roadmap
+## 3. Implementation Status: Phase 2 vs. Planned Roadmap
 
-| Feature Area | Current Status (Phase 1) | Planned Phase |
+| Feature Area | Current Status | Implemented Phase |
 | :--- | :--- | :--- |
-| **Manifest V3 Foundation** | ✅ **Implemented** (Zero unnecessary permissions) | Phase 1 |
-| **Extension Popup UI** | ✅ **Implemented** (Dark navy theme, status badge, feature roadmap) | Phase 1 |
-| **Settings / Options Page** | ✅ **Implemented** (Static roadmap preview & architectural overview) | Phase 1 |
-| **Popup-to-Settings Navigation** | ✅ **Implemented** (Using `chrome.runtime.openOptionsPage()`) | Phase 1 |
-| **Automated Foundation Testing** | ✅ **Implemented** (12-check test suite with Node test runner) | Phase 1 |
-| **YouTube Shorts Blocking** | ⏳ *Intentionally Deferred* | Phase 2 |
-| **Instagram Reels Blocking** | ⏳ *Intentionally Deferred* | Phase 2 |
+| **Manifest V3 Foundation** | ✅ **Implemented** (Least privilege) | Phase 1 |
+| **Extension Popup UI** | ✅ **Implemented** (With active Shorts toggle) | Phase 1 & 2 |
+| **Settings / Options Page** | ✅ **Implemented** (With active Shorts toggle) | Phase 1 & 2 |
+| **YouTube Shorts Route Blocker** | ✅ **Implemented** (URL parser, media interceptor, overlay) | Phase 2 |
+| **YouTube Shorts Shelf Suppression** | ✅ **Implemented** (Sidebar links & homepage shelves hidden) | Phase 2 |
+| **Client-Side SPA Navigation Sync** | ✅ **Implemented** (Handles yt-navigate-finish, popstate) | Phase 2 |
+| **Instagram Reels Blocking** | ⏳ *Intentionally Deferred* | Phase 3 |
 | **Reflective Intervention Prompts** | ⏳ *Intentionally Deferred* | Phase 3 |
 | **Daily Time Budgets** | ⏳ *Intentionally Deferred* | Phase 4 |
 | **Focus Schedules & Quiet Blocks** | ⏳ *Intentionally Deferred* | Phase 4 |
 | **Usage Analytics & Local Dashboard** | ⏳ *Intentionally Deferred* | Phase 5 |
 
-> **Note on Phase 1:** No fake toggles or mockup blocking rules are enabled. The popup displays a clear **"Setup in progress"** status indicator, faithfully reporting the project's foundation state.
+---
+
+## 4. Architecture & Technical Design (Phase 2)
+
+### A. Route Detection (`src/content/youtube/route-detector.js`)
+- Uses the standard structured `URL` API.
+- Strictly targets `/shorts` and `/shorts/{VIDEO_ID}` routes on YouTube hostnames (`youtube.com`, `www.youtube.com`, `m.youtube.com`).
+- Disallows false positives: `/watch?v=...`, `/results?search_query=...`, `/feed/subscriptions`, `/@channel`, `/channel/...`, and `/playlist?list=...` are explicitly recognized as normal YouTube pages and are never blocked.
+- Handles query parameters (`?feature=share`) and hashes (`#t=10s`) safely.
+- Gracefully returns safe non-blocking defaults for malformed URLs without throwing exceptions.
+- Provides optional `canonicalWatchUrl` (`https://www.youtube.com/watch?v={VIDEO_ID}`) strictly when a valid 6-16 character alphanumeric video ID is present.
+
+### B. Media Suppression & Isolated Overlay (`src/content/youtube/blocker-overlay.js`)
+- Completely covers the Shorts player with an opaque, isolated interface injected via Shadow DOM (`#scrollshield-youtube-blocker-root`).
+- Automatically pauses any active HTML5 `<video>` elements and sets `muted = true`.
+- Hooks `play` and `playing` capture listeners to prevent background audio/video resumption behind the overlay.
+- Provides accessible navigation controls:
+  - **Return to YouTube Home:** Navigates safely to `/`.
+  - **Go Back:** Uses browser history (`window.history.back()`) with fallback to `/`.
+  - **Watch as Regular Video:** Explicit optional conversion to `/watch?v={VIDEO_ID}` only when a valid video ID was parsed.
+- Prevents infinite redirect loops and preserves browser history.
+
+### C. Conservative Shelf Suppression (`src/content/youtube/selectors.js`)
+- Targets only verified, semantic custom elements:
+  - `ytd-rich-section-renderer:has(ytd-rich-shelf-renderer[is-shorts])`
+  - `ytd-reel-shelf-renderer`
+  - `ytd-guide-entry-renderer:has(a[href^="/shorts"])`
+  - `ytd-mini-guide-entry-renderer:has(a[href^="/shorts"])`
+- Safety check `isSafeToHide()` ensures top-level containers (`YTD-APP`, `YTD-BROWSE`, `YTD-SEARCH`, `YTD-WATCH-FLEXY`) and containers hosting regular videos are never hidden.
+- Declarative CSS injection applies hiding rules scoped to `html[data-scrollshield-shorts-blocked="true"]`.
+
+### D. SPA Navigation Monitoring (`src/content/youtube/navigation-monitor.js`)
+- Detects client-side SPA route transitions by subscribing to YouTube lifecycle events (`yt-navigate-finish`, `yt-page-data-updated`), browser history `popstate` events, and a scoped `MutationObserver`.
+- Avoids unbounded polling loops and avoids memory leaks through idempotent DOM cleanup.
+
+### E. Settings Management (`src/common/settings.js`)
+- Stores `youtubeShortsEnabled: boolean` (defaults to `true` for first-time users).
+- Stored exclusively in local browser storage via `chrome.storage.local`.
+- Live synchronization: changes made in the popup or settings page immediately broadcast to content scripts via `chrome.storage.onChanged`.
 
 ---
 
-## 4. Technology Stack
+## 5. Technology Stack & Permissions
 
 - **Extension Specification:** Chrome Extension Manifest V3 (`manifest_version: 3`).
-- **Core Languages:** Vanilla JavaScript (ES Modules), HTML5, and CSS3.
-- **Permissions:** None requested in Phase 1 (least privilege principle).
-- **Styling Architecture:** Custom CSS design system with dark navy (`#0b0f19`) and restrained violet/indigo accents (`#6366f1`), full WCAG-compliant color contrast, and visible `:focus-visible` keyboard focus rings.
-- **Testing Runner:** Node.js built-in test runner (`node:test`, `node:assert/strict`).
-- **Assets:** Custom PNG icons generated at 16x16, 32x32, 48x48, and 128x128 pixels.
+- **Core Languages:** Vanilla JavaScript (ES Modules for source, standalone bundled IIFE for content script), HTML5, and CSS3.
+- **Permissions:**
+  - `"storage"`: **Strictly and solely requested** to persist user configuration (`youtubeShortsEnabled`) locally and notify content scripts of setting updates.
+  - No `tabs`, `history`, `webRequest`, `scripting`, or background service workers are declared.
+- **Content Scripts:**
+  - Statically scoped to `*://*.youtube.com/*`.
+  - No broad `host_permissions` requested.
 
 ---
 
-## 5. Repository Folder Structure
+## 6. Repository Folder Structure
 
 ```
 ScrollShield/
@@ -71,6 +111,16 @@ ScrollShield/
 │   │       ├── icon32.png
 │   │       ├── icon48.png
 │   │       └── icon128.png
+│   ├── common/
+│   │   └── settings.js
+│   ├── content/
+│   │   ├── youtube.bundle.js
+│   │   └── youtube/
+│   │       ├── blocker-overlay.js
+│   │       ├── index.js
+│   │       ├── navigation-monitor.js
+│   │       ├── route-detector.js
+│   │       └── selectors.js
 │   ├── popup/
 │   │   ├── popup.html
 │   │   ├── popup.css
@@ -80,35 +130,17 @@ ScrollShield/
 │       ├── settings.css
 │       └── settings.js
 └── tests/
-    └── manifest.test.mjs
+    ├── blocking-logic.test.mjs
+    ├── manifest.test.mjs
+    ├── route-detector.test.mjs
+    └── settings.test.mjs
 ```
 
 ---
 
-## 6. Prerequisites
+## 7. How to Run Automated Tests
 
-- **Google Chrome** (version 88+ for Manifest V3 support; version 120+ recommended).
-- **Node.js** (v18+ recommended; project validated on Node v24.12.0) for running automated tests.
-
----
-
-## 7. How to Load the Extension Unpacked in Chrome
-
-Follow these steps to install and inspect ScrollShield in your local Google Chrome browser:
-
-1. Open `chrome://extensions` in your Chrome browser address bar.
-2. Enable **Developer mode** using the toggle switch located in the top-right corner.
-3. Select the **Load unpacked** button in the top-left toolbar.
-4. Choose the `ScrollShield` directory (the folder containing `manifest.json`).
-5. Pin the extension if desired by clicking the Chrome puzzle extensions menu and pinning **ScrollShield**.
-6. Click the toolbar icon and inspect the popup (verify branding, "Setup in progress" status badge, version number, and planned feature preview).
-7. Open Settings by clicking **Open Settings** inside the popup, and verify that the full settings options page opens in a new tab.
-
----
-
-## 8. How to Run Validation Tests
-
-ScrollShield includes a lightweight, zero-dependency test suite utilizing Node.js's native test runner to validate the Manifest V3 specification, icon integrity, and file references.
+ScrollShield includes a zero-dependency automated test suite leveraging Node.js's native test runner.
 
 ### Command
 
@@ -116,44 +148,93 @@ ScrollShield includes a lightweight, zero-dependency test suite utilizing Node.j
 npm test
 ```
 
-Or invoke Node directly:
+Or run directly:
 
 ```bash
-node --test tests/manifest.test.mjs
+node --test tests/manifest.test.mjs tests/route-detector.test.mjs tests/settings.test.mjs tests/blocking-logic.test.mjs
 ```
 
-### Verified Checks
+### Automated Checks Performed (46 Tests across 4 Suites)
 
-- Valid JSON parsing of `manifest.json`.
-- Strict enforcement of `manifest_version: 3`.
-- Exact project name match (`ScrollShield`) and valid description.
-- Semantic versioning format compliance.
-- Action popup file existence (`src/popup/popup.html`).
-- Options page file existence (`src/settings/settings.html`).
-- Verification that all icon resolutions (16x16, 32x32, 48x48, 128x128) exist on disk and have valid PNG binary magic signatures (`0x89 0x50 0x4E 0x47 0x0D 0x0A 0x1A 0x0A`).
-- Strict enforcement that no unnecessary permissions or host permissions are declared.
-- Strict enforcement that no background service workers or content scripts are declared in Phase 1.
-- Integrity verification of all popup and settings companion files (HTML, CSS, JS).
+1. **Manifest & Security Specifications (`manifest.test.mjs`):**
+   - Valid JSON parsing, MV3 specification, semantic version 0.2.0.
+   - All icon files and PNG magic byte headers.
+   - Strict enforcement that permissions contain **only** `"storage"`.
+   - Strict enforcement that **no** background service worker or host permissions are declared.
+   - Verification that `content_scripts` is scoped exclusively to YouTube and references `youtube.bundle.js`.
+2. **URL Route Detector (`route-detector.test.mjs`):**
+   - Standard `/shorts/VIDEO_ID` URLs.
+   - Shorts with query parameters and fragments.
+   - Root `/shorts` player route.
+   - Exclusion of `/watch`, `/results`, `/feed/subscriptions`, `/@channel`, `/channel/ID`, `/playlist`.
+   - Safe non-throwing handling of malformed URLs.
+   - Safe exclusion of unrelated paths containing the substring "shorts".
+   - Alphanumeric video ID validation.
+   - YouTube hostname validation.
+3. **Settings Layer (`settings.test.mjs`):**
+   - Default setting policy (`youtubeShortsEnabled = true`).
+   - Enabled and disabled states.
+   - Missing and malformed setting type recovery.
+   - Chrome storage get/set mocked integration.
+   - Storage connection failure graceful fallback.
+4. **Blocking Logic & DOM Safety (`blocking-logic.test.mjs`):**
+   - Blocking enabled vs. disabled decision logic.
+   - Normal watch page non-blocking assurance.
+   - SPA navigation transitions between Shorts and regular video.
+   - Idempotence on rapid repeated route evaluations.
+   - DOM safety: ensures containers containing regular videos are never hidden.
+   - Category coverage for shelf and navigation selectors.
+   - Valid scoped declarative CSS generation.
 
 ---
 
-## 9. Current Limitations
+## 8. Manual Browser Verification Procedure
 
-- **No Active Blocking:** Phase 1 delivers the structural foundation, manifest configuration, and UI surfaces. YouTube Shorts and Instagram Reels filtering rules are intentionally deferred to Phase 2.
-- **Static Settings:** The settings page displays the upcoming configuration architecture and planned toggles without enabling interactive toggle storage.
-- **Offline / Local Execution:** No cloud syncing or external integrations are active.
+To verify real-world YouTube integration in Google Chrome:
+
+1. **Load/Reload Extension:**
+   - Open `chrome://extensions`.
+   - Enable **Developer mode** in top-right.
+   - Click **Load unpacked** and select the `ScrollShield` directory (or click reload icon if already loaded).
+   - Verify version `0.2.0` is displayed with no manifest errors.
+2. **Verify Homepage & Navigation:**
+   - Navigate to `https://www.youtube.com`.
+   - Confirm that identifiable Shorts shelves on the homepage and the "Shorts" link in the left sidebar are hidden.
+   - Confirm normal recommended videos, channel avatars, and navigation links remain visible and functional.
+3. **Verify Direct Shorts Route Blocking:**
+   - Open any Shorts URL (e.g. `https://www.youtube.com/shorts/{VIDEO_ID}`).
+   - Verify the ScrollShield **"YouTube Shorts Blocked"** overlay appears immediately.
+   - Confirm audio and video are paused and cannot be resumed in the background.
+   - Click **Return to YouTube Home** and confirm you are taken to `/`.
+4. **Verify Normal Watch Pages:**
+   - Click any regular YouTube video (`https://www.youtube.com/watch?v=...`).
+   - Confirm the video plays normally with standard controls, comments, and recommendations.
+5. **Verify SPA Navigation & Back/Forward:**
+   - Navigate from a regular video to a Shorts route; confirm the overlay appears without a full page reload.
+   - Use browser **Back** button; confirm the regular video is restored.
+   - Use browser **Forward** button; confirm the overlay re-engages cleanly.
+6. **Verify Toggle in Popup & Settings:**
+   - Click the ScrollShield extension toolbar icon.
+   - Toggle **YouTube Shorts Blocker** off; refresh or navigate to Shorts and confirm normal Shorts access is restored and shelves reappear.
+   - Toggle **YouTube Shorts Blocker** back on; confirm blocking takes effect immediately without needing to reinstall the extension.
+7. **Console Health Check:**
+   - Open Chrome DevTools Console (`F12`); confirm no unhandled exceptions or CSP errors are thrown.
 
 ---
 
-## 10. Upcoming Development Phases
+## 9. Strategy for Maintaining YouTube Selectors
 
-1. **Phase 2 — Selective Blocking Engine:**
-   - Content scripts and declarative net request rules for YouTube Shorts.
-   - Selective DOM and routing intercepts for Instagram Reels while protecting Direct Messages.
-2. **Phase 3 — Mindful Friction & Reflection Layer:**
-   - Pre-navigation interstitial pause checkpoint.
-   - Customizable reflection prompts stored via `chrome.storage.local`.
-3. **Phase 4 — Daily Budgets & Focus Schedules:**
-   - Dynamic time tracking engine and focus schedules.
-4. **Phase 5 — Analytics & Digital Wellbeing Dashboard:**
-   - Local privacy-preserving visualization of saved focus time and reels prevented.
+YouTube uses a client-rendered Polymer architecture with custom elements (`ytd-*`). While custom element tags are relatively stable, YouTube occasionally modifies internal class names or DOM hierarchies.
+
+**Maintenance Rules:**
+1. **Never rely on obfuscated classes:** Avoid selectors based on dynamic class names like `.ytd-reel-shelf-renderer-0`.
+2. **Prefer semantic tags and attributes:** Rely on `ytd-reel-shelf-renderer` and `ytd-rich-shelf-renderer[is-shorts]`.
+3. **Fail-safe fallback:** If YouTube alters an internal shelf element name, the selector matches 0 nodes, which leaves regular videos untouched rather than hiding unintended elements.
+4. **Scoped CSS via Data Attributes:** The extension injects scoped CSS enabled only when `html[data-scrollshield-shorts-blocked="true"]` is set, avoiding flash-of-unstyled-content (FOUC).
+
+---
+
+## 10. Known Limitations
+
+- **YouTube Internal Layout A/B Tests:** YouTube periodically experiments with alternate shelf wrappers. In new experiments where `[is-shorts]` attribute or `ytd-reel-shelf-renderer` is absent, the shelf may remain visible until updated selectors are added. However, direct navigation to `/shorts/*` will always remain blocked because route detection is based on the URL API, independent of DOM markup.
+- **Mobile Web YouTube (`m.youtube.com`):** Route blocking is active on mobile web YouTube, but mobile DOM structures (`ytm-*`) may vary from desktop layouts.

@@ -1,4 +1,4 @@
-/* ScrollShield Settings Styles - Phase 1 Foundation */
+/* ScrollShield Settings Styles - Phase 2 YouTube Blocker */
 
 :root {
   /* Color Palette */
@@ -6,9 +6,11 @@
   --bg-surface: #121829;
   --bg-surface-elevated: #1a233a;
   --bg-amber-callout: #221c10;
+  --bg-emerald-callout: #11241f;
 
   --border-subtle: #222e49;
   --border-amber: rgba(251, 191, 36, 0.35);
+  --border-emerald: rgba(16, 185, 129, 0.4);
   --border-focus: #818cf8;
 
   --text-primary: #f8fafc;
@@ -18,6 +20,8 @@
   --accent-primary: #6366f1;
   --accent-primary-hover: #4f46e5;
   --accent-light: #a5b4fc;
+  --accent-emerald: #10b981;
+  --accent-emerald-light: #a7f3d0;
   --accent-amber: #fbbf24;
   --accent-amber-text: #fef3c7;
 
@@ -156,13 +160,28 @@ body {
   border: 1px solid var(--border-subtle);
 }
 
-.callout-amber {
-  background-color: var(--bg-amber-callout);
-  border-color: var(--border-amber);
+.callout-emerald {
+  background-color: var(--bg-emerald-callout);
+  border-color: var(--border-emerald);
+}
+
+.callout-emerald .callout-icon {
+  color: var(--accent-emerald);
+}
+
+.callout-emerald .callout-heading {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--accent-emerald-light);
+}
+
+.callout-emerald .callout-text {
+  font-size: 0.875rem;
+  color: #d1fae5;
+  line-height: 1.5;
 }
 
 .callout-icon {
-  color: var(--accent-amber);
   display: flex;
   align-items: flex-start;
   margin-top: 2px;
@@ -173,18 +192,6 @@ body {
   display: flex;
   flex-direction: column;
   gap: 4px;
-}
-
-.callout-heading {
-  font-size: 0.9375rem;
-  font-weight: 600;
-  color: var(--accent-amber-text);
-}
-
-.callout-text {
-  font-size: 0.875rem;
-  color: #fed7aa;
-  line-height: 1.5;
 }
 
 /* Settings Sections */
@@ -230,6 +237,11 @@ body {
   gap: 10px;
 }
 
+.control-card-active {
+  background: linear-gradient(180deg, #151e36 0%, var(--bg-surface) 100%);
+  border-color: #2b3a60;
+}
+
 .control-header {
   display: flex;
   align-items: center;
@@ -252,10 +264,19 @@ body {
   letter-spacing: 0.04em;
   padding: 2px 8px;
   border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.badge-active {
+  background-color: rgba(16, 185, 129, 0.15);
+  color: var(--accent-emerald-light);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+.badge-planned {
   background-color: rgba(99, 102, 241, 0.15);
   color: var(--accent-light);
   border: 1px solid rgba(129, 140, 248, 0.3);
-  flex-shrink: 0;
 }
 
 .control-desc {
@@ -282,6 +303,100 @@ body {
 
 .control-specs strong {
   color: var(--text-secondary);
+}
+
+/* Toggle Control Box inside Card */
+.toggle-control-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background-color: rgba(11, 15, 25, 0.5);
+  border: 1px solid #24304f;
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  margin-top: auto;
+}
+
+.toggle-control-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.toggle-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.toggle-subtext {
+  font-size: 0.75rem;
+  color: var(--accent-emerald-light);
+  margin-top: 1px;
+}
+
+/* Switch */
+.switch-wrapper {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.switch-input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  margin: 0;
+}
+
+.switch-track {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background-color: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 999px;
+  cursor: pointer;
+  position: relative;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.switch-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  background-color: #94a3b8;
+  border-radius: 50%;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s ease;
+}
+
+.switch-input:checked + .switch-track {
+  background-color: var(--accent-primary);
+  border-color: #4f46e5;
+}
+
+.switch-input:checked + .switch-track .switch-thumb {
+  transform: translateX(20px);
+  background-color: #ffffff;
+}
+
+.switch-input:focus-visible + .switch-track {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+}
+
+.error-banner {
+  background-color: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #fca5a5;
+  font-size: 0.75rem;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  margin-top: 6px;
 }
 
 /* Info Card */
