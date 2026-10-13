@@ -327,6 +327,23 @@ body {
   color: var(--accent-emerald-light);
 }
 
+.feature-item-paused {
+  background-color: rgba(39, 31, 16, 0.55);
+  border-color: rgba(251, 191, 36, 0.35);
+}
+
+.feature-item-paused .feature-bullet {
+  color: var(--accent-amber);
+}
+
+.feature-item-paused .feature-name {
+  color: #ffffff;
+}
+
+.feature-item-paused .feature-meta {
+  color: var(--accent-amber);
+}
+
 .feature-bullet {
   color: var(--accent-light);
   display: flex;

@@ -1,12 +1,12 @@
 /**
- * ScrollShield - Settings Script (Phase 3)
- * Handles version display, YouTube Shorts & Instagram Reels settings management,
- * and page navigation.
+ * ScrollShield - Settings Script (Phase 4)
+ * Handles version display, YouTube Shorts, Instagram Reels & Facebook Reels settings management,
+ * dynamic badge indicators, and page navigation.
  */
 
-import { getSettings, setSetting, STORAGE_KEYS } from '../common/settings.js';
+import { getSettings, setSetting, onSettingsChanged, STORAGE_KEYS } from '../common/settings.js';
 
-const FALLBACK_VERSION = '0.3.0';
+const FALLBACK_VERSION = '0.4.0';
 
 /**
  * Safely resolves and displays the extension version from manifest.
@@ -31,20 +31,39 @@ function initializeVersion() {
 }
 
 /**
+ * Updates platform status badge presentation.
+ * @param {string} badgeId
+ * @param {boolean} isEnabled
+ */
+function updateBadge(badgeId, isEnabled) {
+  const badge = document.getElementById(badgeId);
+  if (!badge) return;
+
+  if (isEnabled) {
+    badge.textContent = 'Active';
+    badge.className = 'control-badge badge-active';
+  } else {
+    badge.textContent = 'Paused';
+    badge.className = 'control-badge badge-paused';
+  }
+}
+
+/**
  * Updates status text underneath the YouTube toggle.
  * @param {boolean} isEnabled
  */
 function updateYtToggleSubtext(isEnabled) {
   const subtext = document.getElementById('status-toggle-yt-shorts');
-  if (!subtext) return;
-
-  if (isEnabled) {
-    subtext.textContent = 'Currently blocking Shorts';
-    subtext.style.color = '#a7f3d0';
-  } else {
-    subtext.textContent = 'Shorts blocking paused';
-    subtext.style.color = '#fbbf24';
+  if (subtext) {
+    if (isEnabled) {
+      subtext.textContent = 'Currently blocking Shorts';
+      subtext.style.color = '#a7f3d0';
+    } else {
+      subtext.textContent = 'Shorts blocking paused';
+      subtext.style.color = '#fbbf24';
+    }
   }
+  updateBadge('badge-yt-shorts', isEnabled);
 }
 
 /**
@@ -53,14 +72,67 @@ function updateYtToggleSubtext(isEnabled) {
  */
 function updateIgToggleSubtext(isEnabled) {
   const subtext = document.getElementById('status-toggle-ig-reels');
-  if (!subtext) return;
+  if (subtext) {
+    if (isEnabled) {
+      subtext.textContent = 'Currently blocking Reels';
+      subtext.style.color = '#a7f3d0';
+    } else {
+      subtext.textContent = 'Reels blocking paused';
+      subtext.style.color = '#fbbf24';
+    }
+  }
+  updateBadge('badge-ig-reels', isEnabled);
+}
 
-  if (isEnabled) {
-    subtext.textContent = 'Currently blocking Reels';
-    subtext.style.color = '#a7f3d0';
-  } else {
-    subtext.textContent = 'Reels blocking paused';
-    subtext.style.color = '#fbbf24';
+/**
+ * Updates status text underneath the Facebook toggle.
+ * @param {boolean} isEnabled
+ */
+function updateFbToggleSubtext(isEnabled) {
+  const subtext = document.getElementById('status-toggle-fb-reels');
+  if (subtext) {
+    if (isEnabled) {
+      subtext.textContent = 'Currently blocking Reels';
+      subtext.style.color = '#a7f3d0';
+    } else {
+      subtext.textContent = 'Reels blocking paused';
+      subtext.style.color = '#fbbf24';
+    }
+  }
+  updateBadge('badge-fb-reels', isEnabled);
+}
+
+/**
+ * Applies settings state to all UI switches and labels.
+ * @param {{ youtubeShortsEnabled: boolean, instagramReelsEnabled: boolean, facebookReelsEnabled: boolean }} settings
+ */
+function applySettingsToUi(settings) {
+  const ytToggle = /** @type {HTMLInputElement | null} */ (
+    document.getElementById('settings-toggle-youtube-shorts')
+  );
+  const igToggle = /** @type {HTMLInputElement | null} */ (
+    document.getElementById('settings-toggle-instagram-reels')
+  );
+  const fbToggle = /** @type {HTMLInputElement | null} */ (
+    document.getElementById('settings-toggle-facebook-reels')
+  );
+
+  if (ytToggle) {
+    ytToggle.checked = settings.youtubeShortsEnabled;
+    ytToggle.setAttribute('aria-checked', String(settings.youtubeShortsEnabled));
+    updateYtToggleSubtext(settings.youtubeShortsEnabled);
+  }
+
+  if (igToggle) {
+    igToggle.checked = settings.instagramReelsEnabled;
+    igToggle.setAttribute('aria-checked', String(settings.instagramReelsEnabled));
+    updateIgToggleSubtext(settings.instagramReelsEnabled);
+  }
+
+  if (fbToggle) {
+    fbToggle.checked = settings.facebookReelsEnabled;
+    fbToggle.setAttribute('aria-checked', String(settings.facebookReelsEnabled));
+    updateFbToggleSubtext(settings.facebookReelsEnabled);
   }
 }
 
@@ -74,9 +146,16 @@ async function initializeSettingsToggles() {
   const igToggle = /** @type {HTMLInputElement | null} */ (
     document.getElementById('settings-toggle-instagram-reels')
   );
+  const fbToggle = /** @type {HTMLInputElement | null} */ (
+    document.getElementById('settings-toggle-facebook-reels')
+  );
   const errorMsg = document.getElementById('settings-save-error');
 
-  let currentSettings = { youtubeShortsEnabled: true, instagramReelsEnabled: true };
+  let currentSettings = {
+    youtubeShortsEnabled: true,
+    instagramReelsEnabled: true,
+    facebookReelsEnabled: true
+  };
 
   try {
     currentSettings = await getSettings();
@@ -84,23 +163,20 @@ async function initializeSettingsToggles() {
     // Retain defaults
   }
 
-  if (ytToggle) {
-    ytToggle.checked = currentSettings.youtubeShortsEnabled;
-    ytToggle.setAttribute('aria-checked', String(currentSettings.youtubeShortsEnabled));
-    updateYtToggleSubtext(currentSettings.youtubeShortsEnabled);
-  }
+  applySettingsToUi(currentSettings);
 
-  if (igToggle) {
-    igToggle.checked = currentSettings.instagramReelsEnabled;
-    igToggle.setAttribute('aria-checked', String(currentSettings.instagramReelsEnabled));
-    updateIgToggleSubtext(currentSettings.instagramReelsEnabled);
-  }
+  // Subscribe to external settings changes
+  onSettingsChanged((newSettings) => {
+    currentSettings = newSettings;
+    applySettingsToUi(currentSettings);
+  });
 
   // YouTube Toggle Listener
   if (ytToggle) {
     ytToggle.addEventListener('change', async () => {
       const isChecked = ytToggle.checked;
       ytToggle.setAttribute('aria-checked', String(isChecked));
+      currentSettings.youtubeShortsEnabled = isChecked;
       updateYtToggleSubtext(isChecked);
       if (errorMsg) errorMsg.hidden = true;
 
@@ -109,6 +185,7 @@ async function initializeSettingsToggles() {
       } catch {
         ytToggle.checked = !isChecked;
         ytToggle.setAttribute('aria-checked', String(!isChecked));
+        currentSettings.youtubeShortsEnabled = !isChecked;
         updateYtToggleSubtext(!isChecked);
         if (errorMsg) errorMsg.hidden = false;
       }
@@ -120,6 +197,7 @@ async function initializeSettingsToggles() {
     igToggle.addEventListener('change', async () => {
       const isChecked = igToggle.checked;
       igToggle.setAttribute('aria-checked', String(isChecked));
+      currentSettings.instagramReelsEnabled = isChecked;
       updateIgToggleSubtext(isChecked);
       if (errorMsg) errorMsg.hidden = true;
 
@@ -128,7 +206,29 @@ async function initializeSettingsToggles() {
       } catch {
         igToggle.checked = !isChecked;
         igToggle.setAttribute('aria-checked', String(!isChecked));
+        currentSettings.instagramReelsEnabled = !isChecked;
         updateIgToggleSubtext(!isChecked);
+        if (errorMsg) errorMsg.hidden = false;
+      }
+    });
+  }
+
+  // Facebook Toggle Listener
+  if (fbToggle) {
+    fbToggle.addEventListener('change', async () => {
+      const isChecked = fbToggle.checked;
+      fbToggle.setAttribute('aria-checked', String(isChecked));
+      currentSettings.facebookReelsEnabled = isChecked;
+      updateFbToggleSubtext(isChecked);
+      if (errorMsg) errorMsg.hidden = true;
+
+      try {
+        await setSetting(STORAGE_KEYS.FACEBOOK_REELS_ENABLED, isChecked);
+      } catch {
+        fbToggle.checked = !isChecked;
+        fbToggle.setAttribute('aria-checked', String(!isChecked));
+        currentSettings.facebookReelsEnabled = !isChecked;
+        updateFbToggleSubtext(!isChecked);
         if (errorMsg) errorMsg.hidden = false;
       }
     });

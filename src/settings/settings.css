@@ -273,6 +273,12 @@ body {
   border: 1px solid rgba(16, 185, 129, 0.4);
 }
 
+.badge-paused {
+  background-color: rgba(251, 191, 36, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(251, 191, 36, 0.4);
+}
+
 .badge-planned {
   background-color: rgba(99, 102, 241, 0.15);
   color: var(--accent-light);
