@@ -8,20 +8,24 @@ export const DEFAULT_SETTINGS = Object.freeze({
   youtubeShortsEnabled: true,
   instagramReelsEnabled: true,
   facebookReelsEnabled: true,
-  tiktokForYouEnabled: true
+  tiktokForYouEnabled: true,
+  xHomeFeedEnabled: true,
+  redditFeedsEnabled: true
 });
 
 export const STORAGE_KEYS = Object.freeze({
   YOUTUBE_SHORTS_ENABLED: 'youtubeShortsEnabled',
   INSTAGRAM_REELS_ENABLED: 'instagramReelsEnabled',
   FACEBOOK_REELS_ENABLED: 'facebookReelsEnabled',
-  TIKTOK_FOR_YOU_ENABLED: 'tiktokForYouEnabled'
+  TIKTOK_FOR_YOU_ENABLED: 'tiktokForYouEnabled',
+  X_HOME_FEED_ENABLED: 'xHomeFeedEnabled',
+  REDDIT_FEEDS_ENABLED: 'redditFeedsEnabled'
 });
 
 /**
  * Validates a raw settings object, replacing missing or invalid fields with defaults.
  * @param {unknown} raw
- * @returns {{ youtubeShortsEnabled: boolean, instagramReelsEnabled: boolean, facebookReelsEnabled: boolean, tiktokForYouEnabled: boolean }}
+ * @returns {{ youtubeShortsEnabled: boolean, instagramReelsEnabled: boolean, facebookReelsEnabled: boolean, tiktokForYouEnabled: boolean, xHomeFeedEnabled: boolean, redditFeedsEnabled: boolean }}
  */
 export function validateSettings(raw) {
   if (!raw || typeof raw !== 'object') {
@@ -50,17 +54,29 @@ export function validateSettings(raw) {
       ? rawObj.tiktokForYouEnabled
       : DEFAULT_SETTINGS.tiktokForYouEnabled;
 
+  const xHomeFeedEnabled =
+    typeof rawObj.xHomeFeedEnabled === 'boolean'
+      ? rawObj.xHomeFeedEnabled
+      : DEFAULT_SETTINGS.xHomeFeedEnabled;
+
+  const redditFeedsEnabled =
+    typeof rawObj.redditFeedsEnabled === 'boolean'
+      ? rawObj.redditFeedsEnabled
+      : DEFAULT_SETTINGS.redditFeedsEnabled;
+
   return {
     youtubeShortsEnabled,
     instagramReelsEnabled,
     facebookReelsEnabled,
-    tiktokForYouEnabled
+    tiktokForYouEnabled,
+    xHomeFeedEnabled,
+    redditFeedsEnabled
   };
 }
 
 /**
  * Retrieves current settings from chrome.storage.local with safe defaults.
- * @returns {Promise<{ youtubeShortsEnabled: boolean, instagramReelsEnabled: boolean, facebookReelsEnabled: boolean, tiktokForYouEnabled: boolean }>}
+ * @returns {Promise<{ youtubeShortsEnabled: boolean, instagramReelsEnabled: boolean, facebookReelsEnabled: boolean, tiktokForYouEnabled: boolean, xHomeFeedEnabled: boolean, redditFeedsEnabled: boolean }>}
  */
 export async function getSettings() {
   if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
@@ -71,7 +87,9 @@ export async function getSettings() {
             STORAGE_KEYS.YOUTUBE_SHORTS_ENABLED,
             STORAGE_KEYS.INSTAGRAM_REELS_ENABLED,
             STORAGE_KEYS.FACEBOOK_REELS_ENABLED,
-            STORAGE_KEYS.TIKTOK_FOR_YOU_ENABLED
+            STORAGE_KEYS.TIKTOK_FOR_YOU_ENABLED,
+            STORAGE_KEYS.X_HOME_FEED_ENABLED,
+            STORAGE_KEYS.REDDIT_FEEDS_ENABLED
           ],
           (result) => {
             if (chrome.runtime && chrome.runtime.lastError) {
@@ -113,7 +131,9 @@ export async function setSetting(key, value) {
     STORAGE_KEYS.YOUTUBE_SHORTS_ENABLED,
     STORAGE_KEYS.INSTAGRAM_REELS_ENABLED,
     STORAGE_KEYS.FACEBOOK_REELS_ENABLED,
-    STORAGE_KEYS.TIKTOK_FOR_YOU_ENABLED
+    STORAGE_KEYS.TIKTOK_FOR_YOU_ENABLED,
+    STORAGE_KEYS.X_HOME_FEED_ENABLED,
+    STORAGE_KEYS.REDDIT_FEEDS_ENABLED
   ]);
 
   if (!allowedKeys.has(key)) {
@@ -153,7 +173,7 @@ export async function setSetting(key, value) {
 
 /**
  * Subscribes to settings changes.
- * @param {(newSettings: { youtubeShortsEnabled: boolean, instagramReelsEnabled: boolean, facebookReelsEnabled: boolean, tiktokForYouEnabled: boolean }) => void} callback
+ * @param {(newSettings: { youtubeShortsEnabled: boolean, instagramReelsEnabled: boolean, facebookReelsEnabled: boolean, tiktokForYouEnabled: boolean, xHomeFeedEnabled: boolean, redditFeedsEnabled: boolean }) => void} callback
  * @returns {() => void} Unsubscribe function
  */
 export function onSettingsChanged(callback) {
@@ -164,7 +184,9 @@ export function onSettingsChanged(callback) {
         (changes[STORAGE_KEYS.YOUTUBE_SHORTS_ENABLED] ||
           changes[STORAGE_KEYS.INSTAGRAM_REELS_ENABLED] ||
           changes[STORAGE_KEYS.FACEBOOK_REELS_ENABLED] ||
-          changes[STORAGE_KEYS.TIKTOK_FOR_YOU_ENABLED])
+          changes[STORAGE_KEYS.TIKTOK_FOR_YOU_ENABLED] ||
+          changes[STORAGE_KEYS.X_HOME_FEED_ENABLED] ||
+          changes[STORAGE_KEYS.REDDIT_FEEDS_ENABLED])
       ) {
         getSettings().then(callback);
       }
