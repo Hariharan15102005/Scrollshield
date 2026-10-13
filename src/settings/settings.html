@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ScrollShield - Settings</title>
+  <link rel="stylesheet" href="settings.css">
+</head>
+<body>
+  <div class="settings-layout">
+    <!-- Top Bar -->
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="brand">
+          <div class="brand-icon-wrapper" aria-hidden="true">
+            <img src="../assets/icons/icon32.png" alt="" class="brand-icon" width="28" height="28">
+          </div>
+          <div class="brand-text">
+            <span class="brand-title">ScrollShield</span>
+            <span class="brand-tagline">Take Control. Keep What Matters.</span>
+          </div>
+        </div>
+        <div class="topbar-actions">
+          <button id="close-settings-btn" type="button" class="btn btn-secondary" aria-label="Close this settings page">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+            <span>Close Page</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <div class="content-container">
+        <!-- Page Title & Header -->
+        <section class="page-header" aria-labelledby="page-title">
+          <h1 id="page-title" class="page-title">Settings</h1>
+          <p class="page-lead">
+            Manage your digital boundaries, selective content filters, and mindful reflection prompts.
+          </p>
+        </section>
+
+        <!-- Development Stage Callout -->
+        <section class="callout callout-amber" aria-labelledby="stage-notice-title">
+          <div class="callout-icon" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+          </div>
+          <div class="callout-body">
+            <h2 id="stage-notice-title" class="callout-heading">Phase 1: Project Foundation Active</h2>
+            <p class="callout-text">
+              Active configuration controls and toggles are deliberately withheld in this foundation release.
+              ScrollShield does not display inert or misleading toggles. The controls previewed below outline the
+              exact functionality coming in upcoming phases.
+            </p>
+          </div>
+        </section>
+
+        <!-- Planned Controls List -->
+        <section class="settings-section" aria-labelledby="planned-controls-title">
+          <h2 id="planned-controls-title" class="section-heading">Planned Configuration Controls</h2>
+          <p class="section-description">
+            The following controls are scheduled for implementation in Phase 2 and subsequent releases:
+          </p>
+
+          <div class="controls-grid">
+            <!-- Planned Control 1 -->
+            <article class="control-card">
+              <div class="control-header">
+                <div class="control-badge">Upcoming</div>
+                <h3 class="control-name">Selective Platform Filtering</h3>
+              </div>
+              <p class="control-desc">
+                Granular filtering that suppresses high-friction dopamine loops while preserving essential features.
+              </p>
+              <ul class="control-specs">
+                <li><strong>YouTube:</strong> Block Shorts feed & reels player while preserving search, long-form videos, and subscriptions.</li>
+                <li><strong>Instagram:</strong> Block Reels surface and explore video grid while leaving Direct Messages (DMs) accessible.</li>
+              </ul>
+            </article>
+
+            <!-- Planned Control 2 -->
+            <article class="control-card">
+              <div class="control-header">
+                <div class="control-badge">Upcoming</div>
+                <h3 class="control-name">Reflective Intervention Prompts</h3>
+              </div>
+              <p class="control-desc">
+                Mindful interstitial checkpoints designed to interrupt subconscious scrolling triggers.
+              </p>
+              <ul class="control-specs">
+                <li><strong>Custom Questions:</strong> Configure personal reflection prompts before accessing target URLs.</li>
+                <li><strong>Intervention Delay:</strong> Set an intentional pause duration (5 to 30 seconds) before proceeding.</li>
+              </ul>
+            </article>
+
+            <!-- Planned Control 3 -->
+            <article class="control-card">
+              <div class="control-header">
+                <div class="control-badge">Upcoming</div>
+                <h3 class="control-name">Daily Usage Budgets</h3>
+              </div>
+              <p class="control-desc">
+                Time-capped allowances for selected recreational web platforms.
+              </p>
+              <ul class="control-specs">
+                <li><strong>Budget Allocation:</strong> Daily caps per service or pooled across all distraction targets.</li>
+                <li><strong>Gentle Warnings:</strong> Visual reminders when approaching 80% and 100% of daily allotment.</li>
+              </ul>
+            </article>
+
+            <!-- Planned Control 4 -->
+            <article class="control-card">
+              <div class="control-header">
+                <div class="control-badge">Upcoming</div>
+                <h3 class="control-name">Focus Schedules & Quiet Blocks</h3>
+              </div>
+              <p class="control-desc">
+                Automated scheduling to lock down distracting surfaces during deep work intervals.
+              </p>
+              <ul class="control-specs">
+                <li><strong>Workday Schedules:</strong> Define active days and time windows (e.g. 09:00 - 17:00).</li>
+                <li><strong>Strict Mode:</strong> Disallow manual overrides during active focus periods.</li>
+              </ul>
+            </article>
+          </div>
+        </section>
+
+        <!-- Privacy & Storage Architecture Notice -->
+        <section class="settings-section" aria-labelledby="architecture-title">
+          <h2 id="architecture-title" class="section-heading">Data Privacy & Architecture</h2>
+          <div class="info-card">
+            <p>
+              ScrollShield adheres to a zero-telemetry, offline-first philosophy:
+            </p>
+            <ul class="info-list">
+              <li>All configurations and metrics are stored strictly on your device via Chrome's local storage.</li>
+              <li>No external servers, tracking scripts, third-party analytics, or remote API endpoints.</li>
+              <li>Minimal permissions: permissions are requested only when concrete functionality strictly requires them.</li>
+            </ul>
+          </div>
+        </section>
+
+        <!-- Navigation Return -->
+        <div class="page-footer-nav">
+          <a href="../popup/popup.html" class="btn btn-outline" id="return-popup-link">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="19" y1="12" x2="5" y2="12"></line>
+              <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            <span>Return to Popup Preview</span>
+          </a>
+        </div>
+      </div>
+    </main>
+
+    <!-- Page Footer -->
+    <footer class="settings-footer">
+      <div class="footer-inner">
+        <p class="footer-copy">ScrollShield &bull; Take Control. Keep What Matters.</p>
+        <p class="footer-meta">
+          <span id="settings-version">Version 0.1.0</span> &bull; Manifest V3
+        </p>
+      </div>
+    </footer>
+  </div>
+
+  <script src="settings.js" type="module"></script>
+</body>
+</html>

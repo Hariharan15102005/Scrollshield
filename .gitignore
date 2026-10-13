@@ -1,0 +1,16 @@
+# Node & Dependencies
+node_modules/
+package-lock.json
+
+# Operating System & IDE
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+
+# Logs & Temporary Files
+*.log
+npm-debug.log*
+scratch/
+.system_generated/
