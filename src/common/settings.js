@@ -1,25 +1,27 @@
 /**
- * ScrollShield - Settings Module (Phase 4)
+ * ScrollShield - Settings Module (Phase 5)
  * Provides centralized, validated access to extension configuration
- * for YouTube Shorts, Instagram Reels, and Facebook Reels selective blocking.
+ * for YouTube Shorts, Instagram Reels, Facebook Reels, and TikTok For You Feed selective blocking.
  */
 
 export const DEFAULT_SETTINGS = Object.freeze({
   youtubeShortsEnabled: true,
   instagramReelsEnabled: true,
-  facebookReelsEnabled: true
+  facebookReelsEnabled: true,
+  tiktokForYouEnabled: true
 });
 
 export const STORAGE_KEYS = Object.freeze({
   YOUTUBE_SHORTS_ENABLED: 'youtubeShortsEnabled',
   INSTAGRAM_REELS_ENABLED: 'instagramReelsEnabled',
-  FACEBOOK_REELS_ENABLED: 'facebookReelsEnabled'
+  FACEBOOK_REELS_ENABLED: 'facebookReelsEnabled',
+  TIKTOK_FOR_YOU_ENABLED: 'tiktokForYouEnabled'
 });
 
 /**
  * Validates a raw settings object, replacing missing or invalid fields with defaults.
  * @param {unknown} raw
- * @returns {{ youtubeShortsEnabled: boolean, instagramReelsEnabled: boolean, facebookReelsEnabled: boolean }}
+ * @returns {{ youtubeShortsEnabled: boolean, instagramReelsEnabled: boolean, facebookReelsEnabled: boolean, tiktokForYouEnabled: boolean }}
  */
 export function validateSettings(raw) {
   if (!raw || typeof raw !== 'object') {
@@ -43,16 +45,22 @@ export function validateSettings(raw) {
       ? rawObj.facebookReelsEnabled
       : DEFAULT_SETTINGS.facebookReelsEnabled;
 
+  const tiktokForYouEnabled =
+    typeof rawObj.tiktokForYouEnabled === 'boolean'
+      ? rawObj.tiktokForYouEnabled
+      : DEFAULT_SETTINGS.tiktokForYouEnabled;
+
   return {
     youtubeShortsEnabled,
     instagramReelsEnabled,
-    facebookReelsEnabled
+    facebookReelsEnabled,
+    tiktokForYouEnabled
   };
 }
 
 /**
  * Retrieves current settings from chrome.storage.local with safe defaults.
- * @returns {Promise<{ youtubeShortsEnabled: boolean, instagramReelsEnabled: boolean, facebookReelsEnabled: boolean }>}
+ * @returns {Promise<{ youtubeShortsEnabled: boolean, instagramReelsEnabled: boolean, facebookReelsEnabled: boolean, tiktokForYouEnabled: boolean }>}
  */
 export async function getSettings() {
   if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
@@ -62,7 +70,8 @@ export async function getSettings() {
           [
             STORAGE_KEYS.YOUTUBE_SHORTS_ENABLED,
             STORAGE_KEYS.INSTAGRAM_REELS_ENABLED,
-            STORAGE_KEYS.FACEBOOK_REELS_ENABLED
+            STORAGE_KEYS.FACEBOOK_REELS_ENABLED,
+            STORAGE_KEYS.TIKTOK_FOR_YOU_ENABLED
           ],
           (result) => {
             if (chrome.runtime && chrome.runtime.lastError) {
@@ -103,7 +112,8 @@ export async function setSetting(key, value) {
   const allowedKeys = new Set([
     STORAGE_KEYS.YOUTUBE_SHORTS_ENABLED,
     STORAGE_KEYS.INSTAGRAM_REELS_ENABLED,
-    STORAGE_KEYS.FACEBOOK_REELS_ENABLED
+    STORAGE_KEYS.FACEBOOK_REELS_ENABLED,
+    STORAGE_KEYS.TIKTOK_FOR_YOU_ENABLED
   ]);
 
   if (!allowedKeys.has(key)) {
@@ -143,7 +153,7 @@ export async function setSetting(key, value) {
 
 /**
  * Subscribes to settings changes.
- * @param {(newSettings: { youtubeShortsEnabled: boolean, instagramReelsEnabled: boolean, facebookReelsEnabled: boolean }) => void} callback
+ * @param {(newSettings: { youtubeShortsEnabled: boolean, instagramReelsEnabled: boolean, facebookReelsEnabled: boolean, tiktokForYouEnabled: boolean }) => void} callback
  * @returns {() => void} Unsubscribe function
  */
 export function onSettingsChanged(callback) {
@@ -153,7 +163,8 @@ export function onSettingsChanged(callback) {
         areaName === 'local' &&
         (changes[STORAGE_KEYS.YOUTUBE_SHORTS_ENABLED] ||
           changes[STORAGE_KEYS.INSTAGRAM_REELS_ENABLED] ||
-          changes[STORAGE_KEYS.FACEBOOK_REELS_ENABLED])
+          changes[STORAGE_KEYS.FACEBOOK_REELS_ENABLED] ||
+          changes[STORAGE_KEYS.TIKTOK_FOR_YOU_ENABLED])
       ) {
         getSettings().then(callback);
       }

@@ -1,12 +1,12 @@
 /**
- * ScrollShield - Settings Script (Phase 4)
- * Handles version display, YouTube Shorts, Instagram Reels & Facebook Reels settings management,
+ * ScrollShield - Settings Script (Phase 5)
+ * Handles version display, YouTube Shorts, Instagram Reels, Facebook Reels & TikTok For You settings,
  * dynamic badge indicators, and page navigation.
  */
 
 import { getSettings, setSetting, onSettingsChanged, STORAGE_KEYS } from '../common/settings.js';
 
-const FALLBACK_VERSION = '0.4.0';
+const FALLBACK_VERSION = '0.5.0';
 
 /**
  * Safely resolves and displays the extension version from manifest.
@@ -103,8 +103,26 @@ function updateFbToggleSubtext(isEnabled) {
 }
 
 /**
+ * Updates status text underneath the TikTok toggle.
+ * @param {boolean} isEnabled
+ */
+function updateTtToggleSubtext(isEnabled) {
+  const subtext = document.getElementById('status-toggle-tt-foryou');
+  if (subtext) {
+    if (isEnabled) {
+      subtext.textContent = 'Currently blocking For You feed';
+      subtext.style.color = '#a7f3d0';
+    } else {
+      subtext.textContent = 'For You blocking paused';
+      subtext.style.color = '#fbbf24';
+    }
+  }
+  updateBadge('badge-tt-foryou', isEnabled);
+}
+
+/**
  * Applies settings state to all UI switches and labels.
- * @param {{ youtubeShortsEnabled: boolean, instagramReelsEnabled: boolean, facebookReelsEnabled: boolean }} settings
+ * @param {{ youtubeShortsEnabled: boolean, instagramReelsEnabled: boolean, facebookReelsEnabled: boolean, tiktokForYouEnabled: boolean }} settings
  */
 function applySettingsToUi(settings) {
   const ytToggle = /** @type {HTMLInputElement | null} */ (
@@ -115,6 +133,9 @@ function applySettingsToUi(settings) {
   );
   const fbToggle = /** @type {HTMLInputElement | null} */ (
     document.getElementById('settings-toggle-facebook-reels')
+  );
+  const ttToggle = /** @type {HTMLInputElement | null} */ (
+    document.getElementById('settings-toggle-tiktok-foryou')
   );
 
   if (ytToggle) {
@@ -134,6 +155,12 @@ function applySettingsToUi(settings) {
     fbToggle.setAttribute('aria-checked', String(settings.facebookReelsEnabled));
     updateFbToggleSubtext(settings.facebookReelsEnabled);
   }
+
+  if (ttToggle) {
+    ttToggle.checked = settings.tiktokForYouEnabled;
+    ttToggle.setAttribute('aria-checked', String(settings.tiktokForYouEnabled));
+    updateTtToggleSubtext(settings.tiktokForYouEnabled);
+  }
 }
 
 /**
@@ -149,12 +176,16 @@ async function initializeSettingsToggles() {
   const fbToggle = /** @type {HTMLInputElement | null} */ (
     document.getElementById('settings-toggle-facebook-reels')
   );
+  const ttToggle = /** @type {HTMLInputElement | null} */ (
+    document.getElementById('settings-toggle-tiktok-foryou')
+  );
   const errorMsg = document.getElementById('settings-save-error');
 
   let currentSettings = {
     youtubeShortsEnabled: true,
     instagramReelsEnabled: true,
-    facebookReelsEnabled: true
+    facebookReelsEnabled: true,
+    tiktokForYouEnabled: true
   };
 
   try {
@@ -171,68 +202,29 @@ async function initializeSettingsToggles() {
     applySettingsToUi(currentSettings);
   });
 
-  // YouTube Toggle Listener
-  if (ytToggle) {
-    ytToggle.addEventListener('change', async () => {
-      const isChecked = ytToggle.checked;
-      ytToggle.setAttribute('aria-checked', String(isChecked));
-      currentSettings.youtubeShortsEnabled = isChecked;
-      updateYtToggleSubtext(isChecked);
+  const setupSettingsToggle = (toggleEl, key, updateSubtextFn) => {
+    if (!toggleEl) return;
+    toggleEl.addEventListener('change', async () => {
+      const isChecked = toggleEl.checked;
+      toggleEl.setAttribute('aria-checked', String(isChecked));
+      updateSubtextFn(isChecked);
       if (errorMsg) errorMsg.hidden = true;
 
       try {
-        await setSetting(STORAGE_KEYS.YOUTUBE_SHORTS_ENABLED, isChecked);
+        await setSetting(key, isChecked);
       } catch {
-        ytToggle.checked = !isChecked;
-        ytToggle.setAttribute('aria-checked', String(!isChecked));
-        currentSettings.youtubeShortsEnabled = !isChecked;
-        updateYtToggleSubtext(!isChecked);
+        toggleEl.checked = !isChecked;
+        toggleEl.setAttribute('aria-checked', String(!isChecked));
+        updateSubtextFn(!isChecked);
         if (errorMsg) errorMsg.hidden = false;
       }
     });
-  }
+  };
 
-  // Instagram Toggle Listener
-  if (igToggle) {
-    igToggle.addEventListener('change', async () => {
-      const isChecked = igToggle.checked;
-      igToggle.setAttribute('aria-checked', String(isChecked));
-      currentSettings.instagramReelsEnabled = isChecked;
-      updateIgToggleSubtext(isChecked);
-      if (errorMsg) errorMsg.hidden = true;
-
-      try {
-        await setSetting(STORAGE_KEYS.INSTAGRAM_REELS_ENABLED, isChecked);
-      } catch {
-        igToggle.checked = !isChecked;
-        igToggle.setAttribute('aria-checked', String(!isChecked));
-        currentSettings.instagramReelsEnabled = !isChecked;
-        updateIgToggleSubtext(!isChecked);
-        if (errorMsg) errorMsg.hidden = false;
-      }
-    });
-  }
-
-  // Facebook Toggle Listener
-  if (fbToggle) {
-    fbToggle.addEventListener('change', async () => {
-      const isChecked = fbToggle.checked;
-      fbToggle.setAttribute('aria-checked', String(isChecked));
-      currentSettings.facebookReelsEnabled = isChecked;
-      updateFbToggleSubtext(isChecked);
-      if (errorMsg) errorMsg.hidden = true;
-
-      try {
-        await setSetting(STORAGE_KEYS.FACEBOOK_REELS_ENABLED, isChecked);
-      } catch {
-        fbToggle.checked = !isChecked;
-        fbToggle.setAttribute('aria-checked', String(!isChecked));
-        currentSettings.facebookReelsEnabled = !isChecked;
-        updateFbToggleSubtext(!isChecked);
-        if (errorMsg) errorMsg.hidden = false;
-      }
-    });
-  }
+  setupSettingsToggle(ytToggle, STORAGE_KEYS.YOUTUBE_SHORTS_ENABLED, updateYtToggleSubtext);
+  setupSettingsToggle(igToggle, STORAGE_KEYS.INSTAGRAM_REELS_ENABLED, updateIgToggleSubtext);
+  setupSettingsToggle(fbToggle, STORAGE_KEYS.FACEBOOK_REELS_ENABLED, updateFbToggleSubtext);
+  setupSettingsToggle(ttToggle, STORAGE_KEYS.TIKTOK_FOR_YOU_ENABLED, updateTtToggleSubtext);
 }
 
 /**

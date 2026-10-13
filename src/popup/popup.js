@@ -1,12 +1,12 @@
 /**
- * ScrollShield - Popup Script (Phase 4)
- * Handles version display, active YouTube Shorts, Instagram Reels & Facebook Reels toggles,
+ * ScrollShield - Popup Script (Phase 5)
+ * Handles version display, active YouTube Shorts, Instagram Reels, Facebook Reels & TikTok For You toggles,
  * dynamic status indicators, and settings page navigation.
  */
 
 import { getSettings, setSetting, onSettingsChanged, STORAGE_KEYS } from '../common/settings.js';
 
-const FALLBACK_VERSION = 'v0.4.0';
+const FALLBACK_VERSION = 'v0.5.0';
 
 /**
  * Safely resolves extension version from Chrome manifest or uses fallback.
@@ -35,8 +35,9 @@ function initializeVersion() {
  * @param {boolean} ytEnabled
  * @param {boolean} igEnabled
  * @param {boolean} fbEnabled
+ * @param {boolean} ttEnabled
  */
-function updateRoadmapStatus(ytEnabled, igEnabled, fbEnabled) {
+function updateRoadmapStatus(ytEnabled, igEnabled, fbEnabled, ttEnabled) {
   const platforms = [
     {
       id: 'feature-item-yt',
@@ -58,6 +59,13 @@ function updateRoadmapStatus(ytEnabled, igEnabled, fbEnabled) {
       enabled: fbEnabled,
       activeMeta: 'Active · /reel/ blocked & Messenger preserved',
       pausedMeta: 'Paused · Reels unblocked'
+    },
+    {
+      id: 'feature-item-tt',
+      metaId: 'feature-meta-tt',
+      enabled: ttEnabled,
+      activeMeta: 'Active · For You feed blocked & search/profiles preserved',
+      pausedMeta: 'Paused · For You unblocked'
     }
   ];
 
@@ -83,15 +91,16 @@ function updateRoadmapStatus(ytEnabled, igEnabled, fbEnabled) {
  * @param {boolean} ytEnabled
  * @param {boolean} igEnabled
  * @param {boolean} fbEnabled
+ * @param {boolean} ttEnabled
  */
-function updateStatusCard(ytEnabled, igEnabled, fbEnabled) {
+function updateStatusCard(ytEnabled, igEnabled, fbEnabled, ttEnabled) {
   const dot = document.getElementById('status-indicator-dot');
   const title = document.getElementById('status-title');
   const desc = document.getElementById('status-description');
 
   if (!dot || !title || !desc) return;
 
-  const anyActive = ytEnabled || igEnabled || fbEnabled;
+  const anyActive = ytEnabled || igEnabled || fbEnabled || ttEnabled;
 
   if (anyActive) {
     dot.classList.add('active');
@@ -101,12 +110,13 @@ function updateStatusCard(ytEnabled, igEnabled, fbEnabled) {
     if (ytEnabled) activeList.push('YouTube Shorts');
     if (igEnabled) activeList.push('Instagram Reels');
     if (fbEnabled) activeList.push('Facebook Reels');
+    if (ttEnabled) activeList.push('TikTok For You');
 
-    if (activeList.length === 3) {
+    if (activeList.length === 4) {
       desc.textContent =
-        'YouTube Shorts, Instagram Reels, and Facebook Reels are shielded. Normal videos, Messenger, DMs, posts, and search remain accessible.';
+        'YouTube Shorts, Instagram Reels, Facebook Reels, and TikTok For You feed are shielded. Utility features remain accessible.';
     } else {
-      desc.textContent = `${activeList.join(' and ')} shielding is active. Other platforms are paused.`;
+      desc.textContent = `${activeList.join(', ')} shielding is active. Other platforms are paused.`;
     }
   } else {
     dot.classList.remove('active');
@@ -115,12 +125,12 @@ function updateStatusCard(ytEnabled, igEnabled, fbEnabled) {
       'Short-form video shielding is currently paused across all platforms.';
   }
 
-  updateRoadmapStatus(ytEnabled, igEnabled, fbEnabled);
+  updateRoadmapStatus(ytEnabled, igEnabled, fbEnabled, ttEnabled);
 }
 
 /**
  * Synchronizes visible toggles with given settings object.
- * @param {{ youtubeShortsEnabled: boolean, instagramReelsEnabled: boolean, facebookReelsEnabled: boolean }} settings
+ * @param {{ youtubeShortsEnabled: boolean, instagramReelsEnabled: boolean, facebookReelsEnabled: boolean, tiktokForYouEnabled: boolean }} settings
  */
 function applySettingsToUi(settings) {
   const ytToggle = /** @type {HTMLInputElement | null} */ (
@@ -131,6 +141,9 @@ function applySettingsToUi(settings) {
   );
   const fbToggle = /** @type {HTMLInputElement | null} */ (
     document.getElementById('toggle-facebook-reels')
+  );
+  const ttToggle = /** @type {HTMLInputElement | null} */ (
+    document.getElementById('toggle-tiktok-foryou')
   );
 
   if (ytToggle) {
@@ -148,10 +161,16 @@ function applySettingsToUi(settings) {
     fbToggle.setAttribute('aria-checked', String(settings.facebookReelsEnabled));
   }
 
+  if (ttToggle) {
+    ttToggle.checked = settings.tiktokForYouEnabled;
+    ttToggle.setAttribute('aria-checked', String(settings.tiktokForYouEnabled));
+  }
+
   updateStatusCard(
     settings.youtubeShortsEnabled,
     settings.instagramReelsEnabled,
-    settings.facebookReelsEnabled
+    settings.facebookReelsEnabled,
+    settings.tiktokForYouEnabled
   );
 }
 
@@ -168,12 +187,16 @@ async function initializeToggles() {
   const fbToggle = /** @type {HTMLInputElement | null} */ (
     document.getElementById('toggle-facebook-reels')
   );
+  const ttToggle = /** @type {HTMLInputElement | null} */ (
+    document.getElementById('toggle-tiktok-foryou')
+  );
   const errorMsg = document.getElementById('save-error-message');
 
   let currentSettings = {
     youtubeShortsEnabled: true,
     instagramReelsEnabled: true,
-    facebookReelsEnabled: true
+    facebookReelsEnabled: true,
+    tiktokForYouEnabled: true
   };
 
   try {
@@ -190,92 +213,42 @@ async function initializeToggles() {
     applySettingsToUi(currentSettings);
   });
 
-  // YouTube Toggle handler
-  if (ytToggle) {
-    ytToggle.addEventListener('change', async () => {
-      const isChecked = ytToggle.checked;
-      ytToggle.setAttribute('aria-checked', String(isChecked));
-      currentSettings.youtubeShortsEnabled = isChecked;
+  // Helper for toggle change handler
+  const setupToggleListener = (toggleEl, key, settingProp) => {
+    if (!toggleEl) return;
+    toggleEl.addEventListener('change', async () => {
+      const isChecked = toggleEl.checked;
+      toggleEl.setAttribute('aria-checked', String(isChecked));
+      currentSettings[settingProp] = isChecked;
       updateStatusCard(
         currentSettings.youtubeShortsEnabled,
         currentSettings.instagramReelsEnabled,
-        currentSettings.facebookReelsEnabled
+        currentSettings.facebookReelsEnabled,
+        currentSettings.tiktokForYouEnabled
       );
       if (errorMsg) errorMsg.hidden = true;
 
       try {
-        await setSetting(STORAGE_KEYS.YOUTUBE_SHORTS_ENABLED, isChecked);
+        await setSetting(key, isChecked);
       } catch {
-        ytToggle.checked = !isChecked;
-        ytToggle.setAttribute('aria-checked', String(!isChecked));
-        currentSettings.youtubeShortsEnabled = !isChecked;
+        toggleEl.checked = !isChecked;
+        toggleEl.setAttribute('aria-checked', String(!isChecked));
+        currentSettings[settingProp] = !isChecked;
         updateStatusCard(
           currentSettings.youtubeShortsEnabled,
           currentSettings.instagramReelsEnabled,
-          currentSettings.facebookReelsEnabled
+          currentSettings.facebookReelsEnabled,
+          currentSettings.tiktokForYouEnabled
         );
         if (errorMsg) errorMsg.hidden = false;
       }
     });
-  }
+  };
 
-  // Instagram Toggle handler
-  if (igToggle) {
-    igToggle.addEventListener('change', async () => {
-      const isChecked = igToggle.checked;
-      igToggle.setAttribute('aria-checked', String(isChecked));
-      currentSettings.instagramReelsEnabled = isChecked;
-      updateStatusCard(
-        currentSettings.youtubeShortsEnabled,
-        currentSettings.instagramReelsEnabled,
-        currentSettings.facebookReelsEnabled
-      );
-      if (errorMsg) errorMsg.hidden = true;
-
-      try {
-        await setSetting(STORAGE_KEYS.INSTAGRAM_REELS_ENABLED, isChecked);
-      } catch {
-        igToggle.checked = !isChecked;
-        igToggle.setAttribute('aria-checked', String(!isChecked));
-        currentSettings.instagramReelsEnabled = !isChecked;
-        updateStatusCard(
-          currentSettings.youtubeShortsEnabled,
-          currentSettings.instagramReelsEnabled,
-          currentSettings.facebookReelsEnabled
-        );
-        if (errorMsg) errorMsg.hidden = false;
-      }
-    });
-  }
-
-  // Facebook Toggle handler
-  if (fbToggle) {
-    fbToggle.addEventListener('change', async () => {
-      const isChecked = fbToggle.checked;
-      fbToggle.setAttribute('aria-checked', String(isChecked));
-      currentSettings.facebookReelsEnabled = isChecked;
-      updateStatusCard(
-        currentSettings.youtubeShortsEnabled,
-        currentSettings.instagramReelsEnabled,
-        currentSettings.facebookReelsEnabled
-      );
-      if (errorMsg) errorMsg.hidden = true;
-
-      try {
-        await setSetting(STORAGE_KEYS.FACEBOOK_REELS_ENABLED, isChecked);
-      } catch {
-        fbToggle.checked = !isChecked;
-        fbToggle.setAttribute('aria-checked', String(!isChecked));
-        currentSettings.facebookReelsEnabled = !isChecked;
-        updateStatusCard(
-          currentSettings.youtubeShortsEnabled,
-          currentSettings.instagramReelsEnabled,
-          currentSettings.facebookReelsEnabled
-        );
-        if (errorMsg) errorMsg.hidden = false;
-      }
-    });
-  }
+  setupToggleListener(ytToggle, STORAGE_KEYS.YOUTUBE_SHORTS_ENABLED, 'youtubeShortsEnabled');
+  setupToggleListener(igToggle, STORAGE_KEYS.INSTAGRAM_REELS_ENABLED, 'instagramReelsEnabled');
+  setupToggleListener(fbToggle, STORAGE_KEYS.FACEBOOK_REELS_ENABLED, 'facebookReelsEnabled');
+  setupToggleListener(ttToggle, STORAGE_KEYS.TIKTOK_FOR_YOU_ENABLED, 'tiktokForYouEnabled');
 }
 
 /**

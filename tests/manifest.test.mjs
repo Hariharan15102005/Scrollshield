@@ -43,7 +43,7 @@ function verifyPngFile(relativePath, expectedDimensions = null) {
   }
 }
 
-test('ScrollShield Phase 4 Manifest & Security Specifications', async (t) => {
+test('ScrollShield Phase 5 Manifest & Security Specifications', async (t) => {
   const manifestPath = path.resolve(rootDir, 'manifest.json');
 
   await t.test('manifest.json exists and parses successfully', () => {
@@ -63,14 +63,14 @@ test('ScrollShield Phase 4 Manifest & Security Specifications', async (t) => {
     assert.ok(typeof manifest.description === 'string' && manifest.description.length > 0);
   });
 
-  await t.test('version is semantic version 0.4.0', () => {
+  await t.test('version is semantic version 0.5.0', () => {
     assert.ok(typeof manifest.version === 'string', 'version must be a string');
     assert.match(
       manifest.version,
       /^\d+\.\d+\.\d+$/,
       'version must follow semantic versioning'
     );
-    assert.strictEqual(manifest.version, '0.4.0');
+    assert.strictEqual(manifest.version, '0.5.0');
   });
 
   await t.test('action popup path exists on disk', () => {
@@ -114,7 +114,7 @@ test('ScrollShield Phase 4 Manifest & Security Specifications', async (t) => {
     assert.deepStrictEqual(
       manifest.permissions,
       ['storage'],
-      'Only "storage" permission should be requested in Phase 4'
+      'Only "storage" permission should be requested in Phase 5'
     );
   });
 
@@ -122,22 +122,22 @@ test('ScrollShield Phase 4 Manifest & Security Specifications', async (t) => {
     if (manifest.host_permissions) {
       assert.ok(
         Array.isArray(manifest.host_permissions) && manifest.host_permissions.length === 0,
-        'Phase 4 must not declare host_permissions'
+        'Phase 5 must not declare host_permissions'
       );
     }
   });
 
-  await t.test('no background worker is declared in Phase 4', () => {
+  await t.test('no background worker is declared in Phase 5', () => {
     assert.strictEqual(
       manifest.background,
       undefined,
-      'Phase 4 must not declare a background service worker'
+      'Phase 5 must not declare a background service worker'
     );
   });
 
-  await t.test('content_scripts configures YouTube, Instagram, and Facebook with valid bundles', () => {
+  await t.test('content_scripts configures YouTube, Instagram, Facebook, and TikTok with valid bundles', () => {
     assert.ok(Array.isArray(manifest.content_scripts), 'content_scripts must be an array');
-    assert.strictEqual(manifest.content_scripts.length, 3, 'Should declare YouTube, Instagram, and Facebook content scripts');
+    assert.strictEqual(manifest.content_scripts.length, 4, 'Should declare YouTube, Instagram, Facebook, and TikTok content scripts');
 
     // 1. YouTube entry
     const ytScript = manifest.content_scripts.find((s) => s.matches.includes('*://*.youtube.com/*'));
@@ -174,6 +174,18 @@ test('ScrollShield Phase 4 Manifest & Security Specifications', async (t) => {
     const fbContent = fs.readFileSync(fbBundlePath, 'utf8');
     assert.ok(fbContent.length > 500);
     assert.doesNotMatch(fbContent, /\bexport\s+(default|function|const|let)\b/);
+
+    // 4. TikTok entry
+    const ttScript = manifest.content_scripts.find((s) => s.matches.includes('https://www.tiktok.com/*'));
+    assert.ok(ttScript, 'TikTok content script must be configured');
+    assert.strictEqual(ttScript.js[0], 'src/content/tiktok.bundle.js');
+    assert.strictEqual(ttScript.run_at, 'document_start');
+
+    const ttBundlePath = path.resolve(rootDir, ttScript.js[0]);
+    assert.ok(fs.existsSync(ttBundlePath), 'tiktok.bundle.js must exist on disk');
+    const ttContent = fs.readFileSync(ttBundlePath, 'utf8');
+    assert.ok(ttContent.length > 500);
+    assert.doesNotMatch(ttContent, /\bexport\s+(default|function|const|let)\b/);
   });
 
   await t.test('popup and settings companion files all exist', () => {
@@ -185,7 +197,7 @@ test('ScrollShield Phase 4 Manifest & Security Specifications', async (t) => {
     assert.ok(fs.existsSync(path.resolve(rootDir, 'src/settings/settings.js')));
   });
 
-  await t.test('source modules for all three platforms and common layer all exist', () => {
+  await t.test('source modules for all four platforms and common layer all exist', () => {
     assert.ok(fs.existsSync(path.resolve(rootDir, 'src/common/settings.js')));
 
     // YouTube source modules
@@ -208,5 +220,12 @@ test('ScrollShield Phase 4 Manifest & Security Specifications', async (t) => {
     assert.ok(fs.existsSync(path.resolve(rootDir, 'src/content/facebook/blocker-overlay.js')));
     assert.ok(fs.existsSync(path.resolve(rootDir, 'src/content/facebook/navigation-monitor.js')));
     assert.ok(fs.existsSync(path.resolve(rootDir, 'src/content/facebook/index.js')));
+
+    // TikTok source modules
+    assert.ok(fs.existsSync(path.resolve(rootDir, 'src/content/tiktok/route-detector.js')));
+    assert.ok(fs.existsSync(path.resolve(rootDir, 'src/content/tiktok/selectors.js')));
+    assert.ok(fs.existsSync(path.resolve(rootDir, 'src/content/tiktok/blocker-overlay.js')));
+    assert.ok(fs.existsSync(path.resolve(rootDir, 'src/content/tiktok/navigation-monitor.js')));
+    assert.ok(fs.existsSync(path.resolve(rootDir, 'src/content/tiktok/index.js')));
   });
 });

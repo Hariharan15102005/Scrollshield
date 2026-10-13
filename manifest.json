@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "ScrollShield",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Take Control. Keep What Matters. Selective digital wellbeing assistant for intentional browsing.",
   "icons": {
     "16": "src/assets/icons/icon16.png",
@@ -52,6 +52,16 @@
       ],
       "js": [
         "src/content/facebook.bundle.js"
+      ],
+      "run_at": "document_start"
+    },
+    {
+      "matches": [
+        "https://www.tiktok.com/*",
+        "https://m.tiktok.com/*"
+      ],
+      "js": [
+        "src/content/tiktok.bundle.js"
       ],
       "run_at": "document_start"
     }
