@@ -1,17 +1,18 @@
 {
   "name": "scrollshield",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Chrome Extension Manifest V3 for selective social media blocking and digital wellbeing",
   "type": "module",
   "scripts": {
-    "test": "node --test tests/manifest.test.mjs tests/route-detector.test.mjs tests/settings.test.mjs tests/blocking-logic.test.mjs"
+    "test": "node --test tests/manifest.test.mjs tests/route-detector.test.mjs tests/blocking-logic.test.mjs tests/instagram-route-detector.test.mjs tests/instagram-blocking-logic.test.mjs tests/settings.test.mjs"
   },
   "keywords": [
     "chrome-extension",
     "manifest-v3",
     "digital-wellbeing",
     "productivity",
-    "youtube-shorts-blocker"
+    "youtube-shorts-blocker",
+    "instagram-reels-blocker"
   ],
   "author": "ScrollShield Contributors",
   "license": "MIT"

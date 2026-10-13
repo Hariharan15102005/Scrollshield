@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "ScrollShield",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Take Control. Keep What Matters. Selective digital wellbeing assistant for intentional browsing.",
   "icons": {
     "16": "src/assets/icons/icon16.png",
@@ -33,6 +33,15 @@
       ],
       "js": [
         "src/content/youtube.bundle.js"
+      ],
+      "run_at": "document_start"
+    },
+    {
+      "matches": [
+        "https://www.instagram.com/*"
+      ],
+      "js": [
+        "src/content/instagram.bundle.js"
       ],
       "run_at": "document_start"
     }

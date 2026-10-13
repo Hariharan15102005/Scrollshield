@@ -1,4 +1,4 @@
-/* ScrollShield Popup Styles - Phase 2 YouTube Blocker */
+/* ScrollShield Popup Styles - Phase 3 Multi-Platform */
 
 :root {
   /* Color Palette - Dark Navy & Restrained Violet/Indigo */
@@ -44,7 +44,7 @@
 
 body {
   width: 360px;
-  min-height: 520px;
+  min-height: 560px;
   background-color: var(--bg-primary);
   color: var(--text-primary);
   font-family: var(--font-family);
@@ -187,7 +187,13 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 6px 0;
+  padding: 4px 0;
+}
+
+.control-divider {
+  height: 1px;
+  background-color: rgba(36, 48, 79, 0.5);
+  margin: 2px 0;
 }
 
 .control-info {

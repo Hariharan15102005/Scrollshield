@@ -1,20 +1,23 @@
 /**
- * ScrollShield - Settings Module (Phase 2)
- * Provides centralized, validated access to extension configuration.
+ * ScrollShield - Settings Module (Phase 3)
+ * Provides centralized, validated access to extension configuration
+ * for both YouTube Shorts and Instagram Reels selective blocking.
  */
 
 export const DEFAULT_SETTINGS = Object.freeze({
-  youtubeShortsEnabled: true
+  youtubeShortsEnabled: true,
+  instagramReelsEnabled: true
 });
 
 export const STORAGE_KEYS = Object.freeze({
-  YOUTUBE_SHORTS_ENABLED: 'youtubeShortsEnabled'
+  YOUTUBE_SHORTS_ENABLED: 'youtubeShortsEnabled',
+  INSTAGRAM_REELS_ENABLED: 'instagramReelsEnabled'
 });
 
 /**
  * Validates a raw settings object, replacing missing or invalid fields with defaults.
  * @param {unknown} raw
- * @returns {{ youtubeShortsEnabled: boolean }}
+ * @returns {{ youtubeShortsEnabled: boolean, instagramReelsEnabled: boolean }}
  */
 export function validateSettings(raw) {
   if (!raw || typeof raw !== 'object') {
@@ -22,31 +25,41 @@ export function validateSettings(raw) {
   }
 
   const rawObj = /** @type {Record<string, unknown>} */ (raw);
+
   const youtubeShortsEnabled =
     typeof rawObj.youtubeShortsEnabled === 'boolean'
       ? rawObj.youtubeShortsEnabled
       : DEFAULT_SETTINGS.youtubeShortsEnabled;
 
+  const instagramReelsEnabled =
+    typeof rawObj.instagramReelsEnabled === 'boolean'
+      ? rawObj.instagramReelsEnabled
+      : DEFAULT_SETTINGS.instagramReelsEnabled;
+
   return {
-    youtubeShortsEnabled
+    youtubeShortsEnabled,
+    instagramReelsEnabled
   };
 }
 
 /**
  * Retrieves current settings from chrome.storage.local with safe defaults.
- * @returns {Promise<{ youtubeShortsEnabled: boolean }>}
+ * @returns {Promise<{ youtubeShortsEnabled: boolean, instagramReelsEnabled: boolean }>}
  */
 export async function getSettings() {
   if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
     return new Promise((resolve) => {
       try {
-        chrome.storage.local.get([STORAGE_KEYS.YOUTUBE_SHORTS_ENABLED], (result) => {
-          if (chrome.runtime && chrome.runtime.lastError) {
-            resolve({ ...DEFAULT_SETTINGS });
-            return;
+        chrome.storage.local.get(
+          [STORAGE_KEYS.YOUTUBE_SHORTS_ENABLED, STORAGE_KEYS.INSTAGRAM_REELS_ENABLED],
+          (result) => {
+            if (chrome.runtime && chrome.runtime.lastError) {
+              resolve({ ...DEFAULT_SETTINGS });
+              return;
+            }
+            resolve(validateSettings(result));
           }
-          resolve(validateSettings(result));
-        });
+        );
       } catch {
         resolve({ ...DEFAULT_SETTINGS });
       }
@@ -69,53 +82,64 @@ export async function getSettings() {
 }
 
 /**
- * Updates a specific setting in storage.
+ * Updates a specific setting in storage without overwriting other keys.
  * @param {string} key
  * @param {unknown} value
  * @returns {Promise<void>}
  */
 export async function setSetting(key, value) {
-  if (key === STORAGE_KEYS.YOUTUBE_SHORTS_ENABLED) {
-    const validatedValue = typeof value === 'boolean' ? value : DEFAULT_SETTINGS.youtubeShortsEnabled;
+  const allowedKeys = new Set([
+    STORAGE_KEYS.YOUTUBE_SHORTS_ENABLED,
+    STORAGE_KEYS.INSTAGRAM_REELS_ENABLED
+  ]);
 
-    if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
-      return new Promise((resolve, reject) => {
-        try {
-          chrome.storage.local.set({ [key]: validatedValue }, () => {
-            if (chrome.runtime && chrome.runtime.lastError) {
-              reject(new Error(chrome.runtime.lastError.message || 'Failed to save setting'));
-              return;
-            }
-            resolve();
-          });
-        } catch (err) {
-          reject(err);
-        }
-      });
-    }
+  if (!allowedKeys.has(key)) {
+    return;
+  }
 
-    // Fallback for local preview / testing
-    try {
-      if (typeof localStorage !== 'undefined') {
-        const current = await getSettings();
-        current[key] = validatedValue;
-        localStorage.setItem('scrollshield_settings', JSON.stringify(current));
+  const defaultValue = DEFAULT_SETTINGS[key];
+  const validatedValue = typeof value === 'boolean' ? value : defaultValue;
+
+  if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+    return new Promise((resolve, reject) => {
+      try {
+        chrome.storage.local.set({ [key]: validatedValue }, () => {
+          if (chrome.runtime && chrome.runtime.lastError) {
+            reject(new Error(chrome.runtime.lastError.message || 'Failed to save setting'));
+            return;
+          }
+          resolve();
+        });
+      } catch (err) {
+        reject(err);
       }
-    } catch {
-      // Ignore
+    });
+  }
+
+  // Fallback for local preview / testing
+  try {
+    if (typeof localStorage !== 'undefined') {
+      const current = await getSettings();
+      current[key] = validatedValue;
+      localStorage.setItem('scrollshield_settings', JSON.stringify(current));
     }
+  } catch {
+    // Ignore
   }
 }
 
 /**
  * Subscribes to settings changes.
- * @param {(newSettings: { youtubeShortsEnabled: boolean }) => void} callback
+ * @param {(newSettings: { youtubeShortsEnabled: boolean, instagramReelsEnabled: boolean }) => void} callback
  * @returns {() => void} Unsubscribe function
  */
 export function onSettingsChanged(callback) {
   if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.onChanged) {
     const listener = (changes, areaName) => {
-      if (areaName === 'local' && changes[STORAGE_KEYS.YOUTUBE_SHORTS_ENABLED]) {
+      if (
+        areaName === 'local' &&
+        (changes[STORAGE_KEYS.YOUTUBE_SHORTS_ENABLED] || changes[STORAGE_KEYS.INSTAGRAM_REELS_ENABLED])
+      ) {
         getSettings().then(callback);
       }
     };

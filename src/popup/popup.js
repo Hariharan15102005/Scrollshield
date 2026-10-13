@@ -1,12 +1,12 @@
 /**
- * ScrollShield - Popup Script (Phase 2)
- * Handles version display, active YouTube Shorts blocking toggle,
+ * ScrollShield - Popup Script (Phase 3)
+ * Handles version display, active YouTube Shorts & Instagram Reels toggles,
  * and settings page navigation.
  */
 
 import { getSettings, setSetting, STORAGE_KEYS } from '../common/settings.js';
 
-const FALLBACK_VERSION = 'v0.2.0';
+const FALLBACK_VERSION = 'v0.3.0';
 
 /**
  * Safely resolves extension version from Chrome manifest or uses fallback.
@@ -31,67 +31,114 @@ function initializeVersion() {
 }
 
 /**
- * Updates status card presentation based on blocking toggle state.
- * @param {boolean} isEnabled
+ * Updates status card presentation based on blocking toggles.
+ * @param {boolean} ytEnabled
+ * @param {boolean} igEnabled
  */
-function updateStatusCard(isEnabled) {
+function updateStatusCard(ytEnabled, igEnabled) {
   const dot = document.getElementById('status-indicator-dot');
   const title = document.getElementById('status-title');
   const desc = document.getElementById('status-description');
 
   if (!dot || !title || !desc) return;
 
-  if (isEnabled) {
+  const anyActive = ytEnabled || igEnabled;
+
+  if (anyActive) {
     dot.classList.add('active');
     title.textContent = 'Shield Active';
-    desc.textContent =
-      'YouTube Shorts blocking is active. Regular videos, subscriptions, and search remain accessible.';
+
+    if (ytEnabled && igEnabled) {
+      desc.textContent =
+        'YouTube Shorts and Instagram Reels are shielded. Normal videos, DMs, posts, and search remain accessible.';
+    } else if (ytEnabled) {
+      desc.textContent =
+        'YouTube Shorts blocking is active. Instagram Reels blocking is currently paused.';
+    } else {
+      desc.textContent =
+        'Instagram Reels blocking is active. YouTube Shorts blocking is currently paused.';
+    }
   } else {
     dot.classList.remove('active');
-    title.textContent = 'Shield Paused';
+    title.textContent = 'Shields Paused';
     desc.textContent =
-      'YouTube Shorts blocking is currently paused. Shorts feeds and reels player are accessible.';
+      'Short-form video shielding is currently paused across all platforms.';
   }
 }
 
 /**
- * Initializes the YouTube Shorts blocking toggle and attaches change listeners.
+ * Initializes platform toggles and attaches change listeners.
  */
-async function initializeToggle() {
-  const toggle = /** @type {HTMLInputElement | null} */ (
+async function initializeToggles() {
+  const ytToggle = /** @type {HTMLInputElement | null} */ (
     document.getElementById('toggle-youtube-shorts')
   );
+  const igToggle = /** @type {HTMLInputElement | null} */ (
+    document.getElementById('toggle-instagram-reels')
+  );
   const errorMsg = document.getElementById('save-error-message');
-  if (!toggle) return;
+
+  let currentSettings = { youtubeShortsEnabled: true, instagramReelsEnabled: true };
 
   try {
-    const settings = await getSettings();
-    toggle.checked = settings.youtubeShortsEnabled;
-    toggle.setAttribute('aria-checked', String(settings.youtubeShortsEnabled));
-    updateStatusCard(settings.youtubeShortsEnabled);
+    currentSettings = await getSettings();
   } catch {
-    // Default checked if reading fails
-    toggle.checked = true;
-    toggle.setAttribute('aria-checked', 'true');
-    updateStatusCard(true);
+    // Retain defaults
   }
 
-  toggle.addEventListener('change', async () => {
-    const isChecked = toggle.checked;
-    toggle.setAttribute('aria-checked', String(isChecked));
-    updateStatusCard(isChecked);
-    if (errorMsg) errorMsg.hidden = true;
+  if (ytToggle) {
+    ytToggle.checked = currentSettings.youtubeShortsEnabled;
+    ytToggle.setAttribute('aria-checked', String(currentSettings.youtubeShortsEnabled));
+  }
 
-    try {
-      await setSetting(STORAGE_KEYS.YOUTUBE_SHORTS_ENABLED, isChecked);
-    } catch {
-      // Revert on save error
-      toggle.checked = !isChecked;
-      toggle.setAttribute('aria-checked', String(!isChecked));
-      updateStatusCard(!isChecked);
-      if (errorMsg) errorMsg.hidden = false;
-    }
-  });
+  if (igToggle) {
+    igToggle.checked = currentSettings.instagramReelsEnabled;
+    igToggle.setAttribute('aria-checked', String(currentSettings.instagramReelsEnabled));
+  }
+
+  updateStatusCard(currentSettings.youtubeShortsEnabled, currentSettings.instagramReelsEnabled);
+
+  // YouTube Toggle handler
+  if (ytToggle) {
+    ytToggle.addEventListener('change', async () => {
+      const isChecked = ytToggle.checked;
+      ytToggle.setAttribute('aria-checked', String(isChecked));
+      currentSettings.youtubeShortsEnabled = isChecked;
+      updateStatusCard(currentSettings.youtubeShortsEnabled, currentSettings.instagramReelsEnabled);
+      if (errorMsg) errorMsg.hidden = true;
+
+      try {
+        await setSetting(STORAGE_KEYS.YOUTUBE_SHORTS_ENABLED, isChecked);
+      } catch {
+        ytToggle.checked = !isChecked;
+        ytToggle.setAttribute('aria-checked', String(!isChecked));
+        currentSettings.youtubeShortsEnabled = !isChecked;
+        updateStatusCard(currentSettings.youtubeShortsEnabled, currentSettings.instagramReelsEnabled);
+        if (errorMsg) errorMsg.hidden = false;
+      }
+    });
+  }
+
+  // Instagram Toggle handler
+  if (igToggle) {
+    igToggle.addEventListener('change', async () => {
+      const isChecked = igToggle.checked;
+      igToggle.setAttribute('aria-checked', String(isChecked));
+      currentSettings.instagramReelsEnabled = isChecked;
+      updateStatusCard(currentSettings.youtubeShortsEnabled, currentSettings.instagramReelsEnabled);
+      if (errorMsg) errorMsg.hidden = true;
+
+      try {
+        await setSetting(STORAGE_KEYS.INSTAGRAM_REELS_ENABLED, isChecked);
+      } catch {
+        igToggle.checked = !isChecked;
+        igToggle.setAttribute('aria-checked', String(!isChecked));
+        currentSettings.instagramReelsEnabled = !isChecked;
+        updateStatusCard(currentSettings.youtubeShortsEnabled, currentSettings.instagramReelsEnabled);
+        if (errorMsg) errorMsg.hidden = false;
+      }
+    });
+  }
 }
 
 /**
@@ -121,7 +168,7 @@ function handleOpenSettings(event) {
  */
 function init() {
   initializeVersion();
-  initializeToggle().catch(() => {});
+  initializeToggles().catch(() => {});
 
   const settingsButton = document.getElementById('open-settings-btn');
   if (settingsButton) {

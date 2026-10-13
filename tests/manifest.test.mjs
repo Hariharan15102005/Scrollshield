@@ -43,7 +43,7 @@ function verifyPngFile(relativePath, expectedDimensions = null) {
   }
 }
 
-test('ScrollShield Phase 2 Manifest & Security Specifications', async (t) => {
+test('ScrollShield Phase 3 Manifest & Security Specifications', async (t) => {
   const manifestPath = path.resolve(rootDir, 'manifest.json');
 
   await t.test('manifest.json exists and parses successfully', () => {
@@ -63,14 +63,14 @@ test('ScrollShield Phase 2 Manifest & Security Specifications', async (t) => {
     assert.ok(typeof manifest.description === 'string' && manifest.description.length > 0);
   });
 
-  await t.test('version is a valid semantic version', () => {
+  await t.test('version is semantic version 0.3.0', () => {
     assert.ok(typeof manifest.version === 'string', 'version must be a string');
     assert.match(
       manifest.version,
       /^\d+\.\d+\.\d+$/,
-      'version must follow semantic versioning (e.g. 0.2.0)'
+      'version must follow semantic versioning'
     );
-    assert.strictEqual(manifest.version, '0.2.0');
+    assert.strictEqual(manifest.version, '0.3.0');
   });
 
   await t.test('action popup path exists on disk', () => {
@@ -114,7 +114,7 @@ test('ScrollShield Phase 2 Manifest & Security Specifications', async (t) => {
     assert.deepStrictEqual(
       manifest.permissions,
       ['storage'],
-      'Only "storage" permission should be requested in Phase 2'
+      'Only "storage" permission should be requested in Phase 3'
     );
   });
 
@@ -122,58 +122,72 @@ test('ScrollShield Phase 2 Manifest & Security Specifications', async (t) => {
     if (manifest.host_permissions) {
       assert.ok(
         Array.isArray(manifest.host_permissions) && manifest.host_permissions.length === 0,
-        'Phase 2 must not declare host_permissions'
+        'Phase 3 must not declare host_permissions'
       );
     }
   });
 
-  await t.test('no background worker is declared in Phase 2', () => {
+  await t.test('no background worker is declared in Phase 3', () => {
     assert.strictEqual(
       manifest.background,
       undefined,
-      'Phase 2 must not declare a background service worker'
+      'Phase 3 must not declare a background service worker'
     );
   });
 
-  await t.test('content_scripts is declared exclusively for YouTube', () => {
+  await t.test('content_scripts configures both YouTube and Instagram with valid bundles', () => {
     assert.ok(Array.isArray(manifest.content_scripts), 'content_scripts must be an array');
-    assert.strictEqual(manifest.content_scripts.length, 1);
+    assert.strictEqual(manifest.content_scripts.length, 2, 'Should declare YouTube and Instagram content scripts');
 
-    const ytScript = manifest.content_scripts[0];
-    assert.deepStrictEqual(ytScript.matches, ['*://*.youtube.com/*']);
-    assert.ok(Array.isArray(ytScript.js));
+    // 1. YouTube entry
+    const ytScript = manifest.content_scripts.find((s) => s.matches.includes('*://*.youtube.com/*'));
+    assert.ok(ytScript, 'YouTube content script must be configured');
     assert.strictEqual(ytScript.js[0], 'src/content/youtube.bundle.js');
     assert.strictEqual(ytScript.run_at, 'document_start');
 
-    // Verify bundle file exists and is non-empty
-    const bundleFullPath = path.resolve(rootDir, ytScript.js[0]);
-    assert.ok(fs.existsSync(bundleFullPath), 'youtube.bundle.js must exist on disk');
-    const content = fs.readFileSync(bundleFullPath, 'utf8');
-    assert.ok(content.length > 500, 'Bundle must be populated');
-    // Ensure no ES module export/import syntax in classic content script bundle
-    assert.doesNotMatch(content, /\bexport\s+(default|function|const|let)\b/);
+    const ytBundlePath = path.resolve(rootDir, ytScript.js[0]);
+    assert.ok(fs.existsSync(ytBundlePath), 'youtube.bundle.js must exist on disk');
+    const ytContent = fs.readFileSync(ytBundlePath, 'utf8');
+    assert.ok(ytContent.length > 500);
+    assert.doesNotMatch(ytContent, /\bexport\s+(default|function|const|let)\b/);
+
+    // 2. Instagram entry
+    const igScript = manifest.content_scripts.find((s) => s.matches.includes('https://www.instagram.com/*'));
+    assert.ok(igScript, 'Instagram content script must be configured');
+    assert.strictEqual(igScript.js[0], 'src/content/instagram.bundle.js');
+    assert.strictEqual(igScript.run_at, 'document_start');
+
+    const igBundlePath = path.resolve(rootDir, igScript.js[0]);
+    assert.ok(fs.existsSync(igBundlePath), 'instagram.bundle.js must exist on disk');
+    const igContent = fs.readFileSync(igBundlePath, 'utf8');
+    assert.ok(igContent.length > 500);
+    assert.doesNotMatch(igContent, /\bexport\s+(default|function|const|let)\b/);
   });
 
-  await t.test('popup companion files (html, css, js) all exist', () => {
-    const popupDir = path.resolve(rootDir, 'src', 'popup');
-    assert.ok(fs.existsSync(path.join(popupDir, 'popup.html')), 'popup.html exists');
-    assert.ok(fs.existsSync(path.join(popupDir, 'popup.css')), 'popup.css exists');
-    assert.ok(fs.existsSync(path.join(popupDir, 'popup.js')), 'popup.js exists');
+  await t.test('popup and settings companion files all exist', () => {
+    assert.ok(fs.existsSync(path.resolve(rootDir, 'src/popup/popup.html')));
+    assert.ok(fs.existsSync(path.resolve(rootDir, 'src/popup/popup.css')));
+    assert.ok(fs.existsSync(path.resolve(rootDir, 'src/popup/popup.js')));
+    assert.ok(fs.existsSync(path.resolve(rootDir, 'src/settings/settings.html')));
+    assert.ok(fs.existsSync(path.resolve(rootDir, 'src/settings/settings.css')));
+    assert.ok(fs.existsSync(path.resolve(rootDir, 'src/settings/settings.js')));
   });
 
-  await t.test('settings companion files (html, css, js) all exist', () => {
-    const settingsDir = path.resolve(rootDir, 'src', 'settings');
-    assert.ok(fs.existsSync(path.join(settingsDir, 'settings.html')), 'settings.html exists');
-    assert.ok(fs.existsSync(path.join(settingsDir, 'settings.css')), 'settings.css exists');
-    assert.ok(fs.existsSync(path.join(settingsDir, 'settings.js')), 'settings.js exists');
-  });
-
-  await t.test('common and content source files all exist', () => {
+  await t.test('source modules for both platforms and common layer all exist', () => {
     assert.ok(fs.existsSync(path.resolve(rootDir, 'src/common/settings.js')));
+
+    // YouTube source modules
     assert.ok(fs.existsSync(path.resolve(rootDir, 'src/content/youtube/route-detector.js')));
     assert.ok(fs.existsSync(path.resolve(rootDir, 'src/content/youtube/selectors.js')));
     assert.ok(fs.existsSync(path.resolve(rootDir, 'src/content/youtube/blocker-overlay.js')));
     assert.ok(fs.existsSync(path.resolve(rootDir, 'src/content/youtube/navigation-monitor.js')));
     assert.ok(fs.existsSync(path.resolve(rootDir, 'src/content/youtube/index.js')));
+
+    // Instagram source modules
+    assert.ok(fs.existsSync(path.resolve(rootDir, 'src/content/instagram/route-detector.js')));
+    assert.ok(fs.existsSync(path.resolve(rootDir, 'src/content/instagram/selectors.js')));
+    assert.ok(fs.existsSync(path.resolve(rootDir, 'src/content/instagram/blocker-overlay.js')));
+    assert.ok(fs.existsSync(path.resolve(rootDir, 'src/content/instagram/navigation-monitor.js')));
+    assert.ok(fs.existsSync(path.resolve(rootDir, 'src/content/instagram/index.js')));
   });
 });

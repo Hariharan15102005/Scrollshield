@@ -1,12 +1,12 @@
 /**
- * ScrollShield - Settings Script (Phase 2)
- * Handles version display, YouTube Shorts settings management,
+ * ScrollShield - Settings Script (Phase 3)
+ * Handles version display, YouTube Shorts & Instagram Reels settings management,
  * and page navigation.
  */
 
 import { getSettings, setSetting, STORAGE_KEYS } from '../common/settings.js';
 
-const FALLBACK_VERSION = '0.2.0';
+const FALLBACK_VERSION = '0.3.0';
 
 /**
  * Safely resolves and displays the extension version from manifest.
@@ -24,17 +24,17 @@ function initializeVersion() {
       }
     }
   } catch {
-    // Non-extension or restricted context; fallback is retained
+    // Retain fallback
   }
 
   versionElement.textContent = `Version ${FALLBACK_VERSION}`;
 }
 
 /**
- * Updates status text underneath the settings toggle.
+ * Updates status text underneath the YouTube toggle.
  * @param {boolean} isEnabled
  */
-function updateToggleSubtext(isEnabled) {
+function updateYtToggleSubtext(isEnabled) {
   const subtext = document.getElementById('status-toggle-yt-shorts');
   if (!subtext) return;
 
@@ -48,42 +48,91 @@ function updateToggleSubtext(isEnabled) {
 }
 
 /**
- * Initializes the YouTube Shorts settings toggle and persists changes.
+ * Updates status text underneath the Instagram toggle.
+ * @param {boolean} isEnabled
  */
-async function initializeSettingsToggle() {
-  const toggle = /** @type {HTMLInputElement | null} */ (
+function updateIgToggleSubtext(isEnabled) {
+  const subtext = document.getElementById('status-toggle-ig-reels');
+  if (!subtext) return;
+
+  if (isEnabled) {
+    subtext.textContent = 'Currently blocking Reels';
+    subtext.style.color = '#a7f3d0';
+  } else {
+    subtext.textContent = 'Reels blocking paused';
+    subtext.style.color = '#fbbf24';
+  }
+}
+
+/**
+ * Initializes settings toggles and persists changes.
+ */
+async function initializeSettingsToggles() {
+  const ytToggle = /** @type {HTMLInputElement | null} */ (
     document.getElementById('settings-toggle-youtube-shorts')
   );
+  const igToggle = /** @type {HTMLInputElement | null} */ (
+    document.getElementById('settings-toggle-instagram-reels')
+  );
   const errorMsg = document.getElementById('settings-save-error');
-  if (!toggle) return;
+
+  let currentSettings = { youtubeShortsEnabled: true, instagramReelsEnabled: true };
 
   try {
-    const settings = await getSettings();
-    toggle.checked = settings.youtubeShortsEnabled;
-    toggle.setAttribute('aria-checked', String(settings.youtubeShortsEnabled));
-    updateToggleSubtext(settings.youtubeShortsEnabled);
+    currentSettings = await getSettings();
   } catch {
-    toggle.checked = true;
-    toggle.setAttribute('aria-checked', 'true');
-    updateToggleSubtext(true);
+    // Retain defaults
   }
 
-  toggle.addEventListener('change', async () => {
-    const isChecked = toggle.checked;
-    toggle.setAttribute('aria-checked', String(isChecked));
-    updateToggleSubtext(isChecked);
-    if (errorMsg) errorMsg.hidden = true;
+  if (ytToggle) {
+    ytToggle.checked = currentSettings.youtubeShortsEnabled;
+    ytToggle.setAttribute('aria-checked', String(currentSettings.youtubeShortsEnabled));
+    updateYtToggleSubtext(currentSettings.youtubeShortsEnabled);
+  }
 
-    try {
-      await setSetting(STORAGE_KEYS.YOUTUBE_SHORTS_ENABLED, isChecked);
-    } catch {
-      // Revert if saving failed
-      toggle.checked = !isChecked;
-      toggle.setAttribute('aria-checked', String(!isChecked));
-      updateToggleSubtext(!isChecked);
-      if (errorMsg) errorMsg.hidden = false;
-    }
-  });
+  if (igToggle) {
+    igToggle.checked = currentSettings.instagramReelsEnabled;
+    igToggle.setAttribute('aria-checked', String(currentSettings.instagramReelsEnabled));
+    updateIgToggleSubtext(currentSettings.instagramReelsEnabled);
+  }
+
+  // YouTube Toggle Listener
+  if (ytToggle) {
+    ytToggle.addEventListener('change', async () => {
+      const isChecked = ytToggle.checked;
+      ytToggle.setAttribute('aria-checked', String(isChecked));
+      updateYtToggleSubtext(isChecked);
+      if (errorMsg) errorMsg.hidden = true;
+
+      try {
+        await setSetting(STORAGE_KEYS.YOUTUBE_SHORTS_ENABLED, isChecked);
+      } catch {
+        ytToggle.checked = !isChecked;
+        ytToggle.setAttribute('aria-checked', String(!isChecked));
+        updateYtToggleSubtext(!isChecked);
+        if (errorMsg) errorMsg.hidden = false;
+      }
+    });
+  }
+
+  // Instagram Toggle Listener
+  if (igToggle) {
+    igToggle.addEventListener('change', async () => {
+      const isChecked = igToggle.checked;
+      igToggle.setAttribute('aria-checked', String(isChecked));
+      updateIgToggleSubtext(isChecked);
+      if (errorMsg) errorMsg.hidden = true;
+
+      try {
+        await setSetting(STORAGE_KEYS.INSTAGRAM_REELS_ENABLED, isChecked);
+      } catch {
+        igToggle.checked = !isChecked;
+        igToggle.setAttribute('aria-checked', String(!isChecked));
+        updateIgToggleSubtext(!isChecked);
+        if (errorMsg) errorMsg.hidden = false;
+      }
+    });
+  }
 }
 
 /**
@@ -93,7 +142,7 @@ function handleClosePage() {
   try {
     window.close();
   } catch {
-    // Some browser contexts restrict window.close()
+    // Some contexts restrict window.close()
   }
 
   if (!window.closed && window.history.length > 1) {
@@ -106,7 +155,7 @@ function handleClosePage() {
  */
 function init() {
   initializeVersion();
-  initializeSettingsToggle().catch(() => {});
+  initializeSettingsToggles().catch(() => {});
 
   const closeButton = document.getElementById('close-settings-btn');
   if (closeButton) {
