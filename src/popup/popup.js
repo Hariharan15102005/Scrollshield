@@ -1,12 +1,13 @@
 /**
- * ScrollShield - Popup Script (Phase 5)
- * Handles version display, active YouTube Shorts, Instagram Reels, Facebook Reels & TikTok For You toggles,
+ * ScrollShield - Popup Script (Phase 6)
+ * Handles version display, active YouTube Shorts, Instagram Reels, Facebook Reels,
+ * TikTok For You, X Home timeline & Reddit feeds toggles,
  * dynamic status indicators, and settings page navigation.
  */
 
 import { getSettings, setSetting, onSettingsChanged, STORAGE_KEYS } from '../common/settings.js';
 
-const FALLBACK_VERSION = 'v0.5.0';
+const FALLBACK_VERSION = 'v0.6.0';
 
 /**
  * Safely resolves extension version from Chrome manifest or uses fallback.
@@ -36,8 +37,10 @@ function initializeVersion() {
  * @param {boolean} igEnabled
  * @param {boolean} fbEnabled
  * @param {boolean} ttEnabled
+ * @param {boolean} xEnabled
+ * @param {boolean} redditEnabled
  */
-function updateRoadmapStatus(ytEnabled, igEnabled, fbEnabled, ttEnabled) {
+function updateRoadmapStatus(ytEnabled, igEnabled, fbEnabled, ttEnabled, xEnabled, redditEnabled) {
   const platforms = [
     {
       id: 'feature-item-yt',
@@ -66,6 +69,20 @@ function updateRoadmapStatus(ytEnabled, igEnabled, fbEnabled, ttEnabled) {
       enabled: ttEnabled,
       activeMeta: 'Active · For You feed blocked & search/profiles preserved',
       pausedMeta: 'Paused · For You unblocked'
+    },
+    {
+      id: 'feature-item-x',
+      metaId: 'feature-meta-x',
+      enabled: xEnabled,
+      activeMeta: 'Active · Home timeline blocked & search/DMs preserved',
+      pausedMeta: 'Paused · Timeline unblocked'
+    },
+    {
+      id: 'feature-item-reddit',
+      metaId: 'feature-meta-reddit',
+      enabled: redditEnabled,
+      activeMeta: 'Active · Home/Popular/All blocked & communities preserved',
+      pausedMeta: 'Paused · Feeds unblocked'
     }
   ];
 
@@ -92,15 +109,17 @@ function updateRoadmapStatus(ytEnabled, igEnabled, fbEnabled, ttEnabled) {
  * @param {boolean} igEnabled
  * @param {boolean} fbEnabled
  * @param {boolean} ttEnabled
+ * @param {boolean} xEnabled
+ * @param {boolean} redditEnabled
  */
-function updateStatusCard(ytEnabled, igEnabled, fbEnabled, ttEnabled) {
+function updateStatusCard(ytEnabled, igEnabled, fbEnabled, ttEnabled, xEnabled, redditEnabled) {
   const dot = document.getElementById('status-indicator-dot');
   const title = document.getElementById('status-title');
   const desc = document.getElementById('status-description');
 
   if (!dot || !title || !desc) return;
 
-  const anyActive = ytEnabled || igEnabled || fbEnabled || ttEnabled;
+  const anyActive = ytEnabled || igEnabled || fbEnabled || ttEnabled || xEnabled || redditEnabled;
 
   if (anyActive) {
     dot.classList.add('active');
@@ -111,10 +130,12 @@ function updateStatusCard(ytEnabled, igEnabled, fbEnabled, ttEnabled) {
     if (igEnabled) activeList.push('Instagram Reels');
     if (fbEnabled) activeList.push('Facebook Reels');
     if (ttEnabled) activeList.push('TikTok For You');
+    if (xEnabled) activeList.push('X Home Timeline');
+    if (redditEnabled) activeList.push('Reddit Feeds');
 
-    if (activeList.length === 4) {
+    if (activeList.length === 6) {
       desc.textContent =
-        'YouTube Shorts, Instagram Reels, Facebook Reels, and TikTok For You feed are shielded. Utility features remain accessible.';
+        'YouTube Shorts, Instagram Reels, Facebook Reels, TikTok For You, X Home timeline, and Reddit feeds are shielded. Utility features remain accessible.';
     } else {
       desc.textContent = `${activeList.join(', ')} shielding is active. Other platforms are paused.`;
     }
@@ -122,15 +143,15 @@ function updateStatusCard(ytEnabled, igEnabled, fbEnabled, ttEnabled) {
     dot.classList.remove('active');
     title.textContent = 'Shields Paused';
     desc.textContent =
-      'Short-form video shielding is currently paused across all platforms.';
+      'Short-form video and feed shielding is currently paused across all platforms.';
   }
 
-  updateRoadmapStatus(ytEnabled, igEnabled, fbEnabled, ttEnabled);
+  updateRoadmapStatus(ytEnabled, igEnabled, fbEnabled, ttEnabled, xEnabled, redditEnabled);
 }
 
 /**
  * Synchronizes visible toggles with given settings object.
- * @param {{ youtubeShortsEnabled: boolean, instagramReelsEnabled: boolean, facebookReelsEnabled: boolean, tiktokForYouEnabled: boolean }} settings
+ * @param {{ youtubeShortsEnabled: boolean, instagramReelsEnabled: boolean, facebookReelsEnabled: boolean, tiktokForYouEnabled: boolean, xHomeFeedEnabled: boolean, redditFeedsEnabled: boolean }} settings
  */
 function applySettingsToUi(settings) {
   const ytToggle = /** @type {HTMLInputElement | null} */ (
@@ -144,6 +165,12 @@ function applySettingsToUi(settings) {
   );
   const ttToggle = /** @type {HTMLInputElement | null} */ (
     document.getElementById('toggle-tiktok-foryou')
+  );
+  const xToggle = /** @type {HTMLInputElement | null} */ (
+    document.getElementById('toggle-x-home')
+  );
+  const redditToggle = /** @type {HTMLInputElement | null} */ (
+    document.getElementById('toggle-reddit-feeds')
   );
 
   if (ytToggle) {
@@ -166,11 +193,23 @@ function applySettingsToUi(settings) {
     ttToggle.setAttribute('aria-checked', String(settings.tiktokForYouEnabled));
   }
 
+  if (xToggle) {
+    xToggle.checked = settings.xHomeFeedEnabled;
+    xToggle.setAttribute('aria-checked', String(settings.xHomeFeedEnabled));
+  }
+
+  if (redditToggle) {
+    redditToggle.checked = settings.redditFeedsEnabled;
+    redditToggle.setAttribute('aria-checked', String(settings.redditFeedsEnabled));
+  }
+
   updateStatusCard(
     settings.youtubeShortsEnabled,
     settings.instagramReelsEnabled,
     settings.facebookReelsEnabled,
-    settings.tiktokForYouEnabled
+    settings.tiktokForYouEnabled,
+    settings.xHomeFeedEnabled,
+    settings.redditFeedsEnabled
   );
 }
 
@@ -190,13 +229,21 @@ async function initializeToggles() {
   const ttToggle = /** @type {HTMLInputElement | null} */ (
     document.getElementById('toggle-tiktok-foryou')
   );
+  const xToggle = /** @type {HTMLInputElement | null} */ (
+    document.getElementById('toggle-x-home')
+  );
+  const redditToggle = /** @type {HTMLInputElement | null} */ (
+    document.getElementById('toggle-reddit-feeds')
+  );
   const errorMsg = document.getElementById('save-error-message');
 
   let currentSettings = {
     youtubeShortsEnabled: true,
     instagramReelsEnabled: true,
     facebookReelsEnabled: true,
-    tiktokForYouEnabled: true
+    tiktokForYouEnabled: true,
+    xHomeFeedEnabled: true,
+    redditFeedsEnabled: true
   };
 
   try {
@@ -224,7 +271,9 @@ async function initializeToggles() {
         currentSettings.youtubeShortsEnabled,
         currentSettings.instagramReelsEnabled,
         currentSettings.facebookReelsEnabled,
-        currentSettings.tiktokForYouEnabled
+        currentSettings.tiktokForYouEnabled,
+        currentSettings.xHomeFeedEnabled,
+        currentSettings.redditFeedsEnabled
       );
       if (errorMsg) errorMsg.hidden = true;
 
@@ -238,7 +287,9 @@ async function initializeToggles() {
           currentSettings.youtubeShortsEnabled,
           currentSettings.instagramReelsEnabled,
           currentSettings.facebookReelsEnabled,
-          currentSettings.tiktokForYouEnabled
+          currentSettings.tiktokForYouEnabled,
+          currentSettings.xHomeFeedEnabled,
+          currentSettings.redditFeedsEnabled
         );
         if (errorMsg) errorMsg.hidden = false;
       }
@@ -249,6 +300,8 @@ async function initializeToggles() {
   setupToggleListener(igToggle, STORAGE_KEYS.INSTAGRAM_REELS_ENABLED, 'instagramReelsEnabled');
   setupToggleListener(fbToggle, STORAGE_KEYS.FACEBOOK_REELS_ENABLED, 'facebookReelsEnabled');
   setupToggleListener(ttToggle, STORAGE_KEYS.TIKTOK_FOR_YOU_ENABLED, 'tiktokForYouEnabled');
+  setupToggleListener(xToggle, STORAGE_KEYS.X_HOME_FEED_ENABLED, 'xHomeFeedEnabled');
+  setupToggleListener(redditToggle, STORAGE_KEYS.REDDIT_FEEDS_ENABLED, 'redditFeedsEnabled');
 }
 
 /**

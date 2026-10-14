@@ -1,12 +1,13 @@
 /**
- * ScrollShield - Settings Script (Phase 5)
- * Handles version display, YouTube Shorts, Instagram Reels, Facebook Reels & TikTok For You settings,
+ * ScrollShield - Settings Script (Phase 6)
+ * Handles version display, YouTube Shorts, Instagram Reels, Facebook Reels,
+ * TikTok For You, X Home timeline & Reddit feeds settings,
  * dynamic badge indicators, and page navigation.
  */
 
 import { getSettings, setSetting, onSettingsChanged, STORAGE_KEYS } from '../common/settings.js';
 
-const FALLBACK_VERSION = '0.5.0';
+const FALLBACK_VERSION = '0.6.0';
 
 /**
  * Safely resolves and displays the extension version from manifest.
@@ -121,8 +122,44 @@ function updateTtToggleSubtext(isEnabled) {
 }
 
 /**
+ * Updates status text underneath the X toggle.
+ * @param {boolean} isEnabled
+ */
+function updateXToggleSubtext(isEnabled) {
+  const subtext = document.getElementById('status-toggle-x-home');
+  if (subtext) {
+    if (isEnabled) {
+      subtext.textContent = 'Currently blocking Home timeline';
+      subtext.style.color = '#a7f3d0';
+    } else {
+      subtext.textContent = 'Home timeline blocking paused';
+      subtext.style.color = '#fbbf24';
+    }
+  }
+  updateBadge('badge-x-home', isEnabled);
+}
+
+/**
+ * Updates status text underneath the Reddit toggle.
+ * @param {boolean} isEnabled
+ */
+function updateRedditToggleSubtext(isEnabled) {
+  const subtext = document.getElementById('status-toggle-reddit-feeds');
+  if (subtext) {
+    if (isEnabled) {
+      subtext.textContent = 'Currently blocking feeds';
+      subtext.style.color = '#a7f3d0';
+    } else {
+      subtext.textContent = 'Feed blocking paused';
+      subtext.style.color = '#fbbf24';
+    }
+  }
+  updateBadge('badge-reddit-feeds', isEnabled);
+}
+
+/**
  * Applies settings state to all UI switches and labels.
- * @param {{ youtubeShortsEnabled: boolean, instagramReelsEnabled: boolean, facebookReelsEnabled: boolean, tiktokForYouEnabled: boolean }} settings
+ * @param {{ youtubeShortsEnabled: boolean, instagramReelsEnabled: boolean, facebookReelsEnabled: boolean, tiktokForYouEnabled: boolean, xHomeFeedEnabled: boolean, redditFeedsEnabled: boolean }} settings
  */
 function applySettingsToUi(settings) {
   const ytToggle = /** @type {HTMLInputElement | null} */ (
@@ -136,6 +173,12 @@ function applySettingsToUi(settings) {
   );
   const ttToggle = /** @type {HTMLInputElement | null} */ (
     document.getElementById('settings-toggle-tiktok-foryou')
+  );
+  const xToggle = /** @type {HTMLInputElement | null} */ (
+    document.getElementById('settings-toggle-x-home')
+  );
+  const redditToggle = /** @type {HTMLInputElement | null} */ (
+    document.getElementById('settings-toggle-reddit-feeds')
   );
 
   if (ytToggle) {
@@ -161,6 +204,18 @@ function applySettingsToUi(settings) {
     ttToggle.setAttribute('aria-checked', String(settings.tiktokForYouEnabled));
     updateTtToggleSubtext(settings.tiktokForYouEnabled);
   }
+
+  if (xToggle) {
+    xToggle.checked = settings.xHomeFeedEnabled;
+    xToggle.setAttribute('aria-checked', String(settings.xHomeFeedEnabled));
+    updateXToggleSubtext(settings.xHomeFeedEnabled);
+  }
+
+  if (redditToggle) {
+    redditToggle.checked = settings.redditFeedsEnabled;
+    redditToggle.setAttribute('aria-checked', String(settings.redditFeedsEnabled));
+    updateRedditToggleSubtext(settings.redditFeedsEnabled);
+  }
 }
 
 /**
@@ -179,13 +234,21 @@ async function initializeSettingsToggles() {
   const ttToggle = /** @type {HTMLInputElement | null} */ (
     document.getElementById('settings-toggle-tiktok-foryou')
   );
+  const xToggle = /** @type {HTMLInputElement | null} */ (
+    document.getElementById('settings-toggle-x-home')
+  );
+  const redditToggle = /** @type {HTMLInputElement | null} */ (
+    document.getElementById('settings-toggle-reddit-feeds')
+  );
   const errorMsg = document.getElementById('settings-save-error');
 
   let currentSettings = {
     youtubeShortsEnabled: true,
     instagramReelsEnabled: true,
     facebookReelsEnabled: true,
-    tiktokForYouEnabled: true
+    tiktokForYouEnabled: true,
+    xHomeFeedEnabled: true,
+    redditFeedsEnabled: true
   };
 
   try {
@@ -225,6 +288,8 @@ async function initializeSettingsToggles() {
   setupSettingsToggle(igToggle, STORAGE_KEYS.INSTAGRAM_REELS_ENABLED, updateIgToggleSubtext);
   setupSettingsToggle(fbToggle, STORAGE_KEYS.FACEBOOK_REELS_ENABLED, updateFbToggleSubtext);
   setupSettingsToggle(ttToggle, STORAGE_KEYS.TIKTOK_FOR_YOU_ENABLED, updateTtToggleSubtext);
+  setupSettingsToggle(xToggle, STORAGE_KEYS.X_HOME_FEED_ENABLED, updateXToggleSubtext);
+  setupSettingsToggle(redditToggle, STORAGE_KEYS.REDDIT_FEEDS_ENABLED, updateRedditToggleSubtext);
 }
 
 /**

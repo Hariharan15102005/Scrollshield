@@ -26,10 +26,10 @@
         <div class="status-header">
           <span id="status-indicator-dot" class="status-indicator-dot active" aria-hidden="true"></span>
           <h2 id="status-title" class="status-title">Shield Active</h2>
-          <span class="status-badge" aria-label="Development stage: Phase 5">Phase 5</span>
+          <span class="status-badge" aria-label="Development stage: Phase 6">Phase 6</span>
         </div>
         <p id="status-description" class="status-description">
-          Short-form video shielding is active on supported platforms. Regular videos, Messenger, DMs, posts, profiles, and search remain accessible.
+          Short-form video and feed shielding is active on supported platforms. Regular videos, communities, Messenger, DMs, posts, profiles, and search remain accessible.
         </p>
       </section>
 
@@ -131,6 +131,54 @@
           </div>
         </div>
 
+        <div class="control-divider" aria-hidden="true"></div>
+
+        <!-- X Home Timeline Toggle -->
+        <div class="control-row">
+          <div class="control-info">
+            <span class="control-label" id="label-x-home">X Home Timeline</span>
+            <span class="control-hint">Block the X Home timeline while keeping messages, profiles and search accessible.</span>
+          </div>
+          <div class="switch-wrapper">
+            <input
+              type="checkbox"
+              id="toggle-x-home"
+              class="switch-input"
+              role="switch"
+              aria-checked="true"
+              aria-labelledby="label-x-home"
+              checked
+            >
+            <label for="toggle-x-home" class="switch-track">
+              <span class="switch-thumb" aria-hidden="true"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="control-divider" aria-hidden="true"></div>
+
+        <!-- Reddit Feeds Toggle -->
+        <div class="control-row">
+          <div class="control-info">
+            <span class="control-label" id="label-reddit-feeds">Reddit Feeds</span>
+            <span class="control-hint">Block Home, Popular and All feeds while keeping communities and discussions accessible.</span>
+          </div>
+          <div class="switch-wrapper">
+            <input
+              type="checkbox"
+              id="toggle-reddit-feeds"
+              class="switch-input"
+              role="switch"
+              aria-checked="true"
+              aria-labelledby="label-reddit-feeds"
+              checked
+            >
+            <label for="toggle-reddit-feeds" class="switch-track">
+              <span class="switch-thumb" aria-hidden="true"></span>
+            </label>
+          </div>
+        </div>
+
         <div id="save-error-message" class="error-banner" role="alert" hidden>
           Failed to save settings. Please try again.
         </div>
@@ -189,6 +237,30 @@
             </div>
           </li>
 
+          <li id="feature-item-x" class="feature-item feature-item-active">
+            <div class="feature-bullet" aria-hidden="true">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+            </div>
+            <div class="feature-details">
+              <span class="feature-name">X Home Timeline Blocker</span>
+              <span id="feature-meta-x" class="feature-meta">Active · Home timeline blocked &amp; search/DMs preserved</span>
+            </div>
+          </li>
+
+          <li id="feature-item-reddit" class="feature-item feature-item-active">
+            <div class="feature-bullet" aria-hidden="true">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+            </div>
+            <div class="feature-details">
+              <span class="feature-name">Reddit Feed Blocker</span>
+              <span id="feature-meta-reddit" class="feature-meta">Active · Home/Popular/All blocked &amp; communities preserved</span>
+            </div>
+          </li>
+
           <li class="feature-item">
             <div class="feature-bullet" aria-hidden="true">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -199,7 +271,7 @@
             </div>
             <div class="feature-details">
               <span class="feature-name">Mindful Reflection Prompts</span>
-              <span class="feature-meta">Planned (Phase 6) · Pre-access intention checks</span>
+              <span class="feature-meta">Planned (Phase 7) · Pre-access intention checks</span>
             </div>
           </li>
 
@@ -234,10 +306,10 @@
     <footer class="popup-footer">
       <div class="footer-left">
         <span class="version-label">Version:</span>
-        <span id="extension-version" class="version-value">v0.5.0</span>
+        <span id="extension-version" class="version-value">v0.6.0</span>
       </div>
       <div class="footer-right">
-        <span class="stage-tag">Phase 5: Multi-Platform</span>
+        <span class="stage-tag">Phase 6: Multi-Platform</span>
       </div>
     </footer>
   </div>

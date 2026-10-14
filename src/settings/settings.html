@@ -51,9 +51,9 @@
             </svg>
           </div>
           <div class="callout-body">
-            <h2 id="stage-notice-title" class="callout-heading">Phase 5: Multi-Platform Shield Active</h2>
+            <h2 id="stage-notice-title" class="callout-heading">Phase 6: Multi-Platform Shield Active</h2>
             <p class="callout-text">
-              Selective short-form video blocking is active for YouTube Shorts, Instagram Reels, Facebook Reels, and TikTok For You feed.
+              Selective short-form video and feed blocking is active for YouTube Shorts, Instagram Reels, Facebook Reels, TikTok For You feed, X Home timeline, and Reddit feeds.
               Reflective intervention prompts, daily budgets, and scheduled quiet hours arrive in subsequent releases.
             </p>
           </div>
@@ -63,7 +63,7 @@
         <section class="settings-section" aria-labelledby="platform-controls-title">
           <h2 id="platform-controls-title" class="section-heading">Platform Filters</h2>
           <p class="section-description">
-            Configure selective blocking rules for addictive short-form loops while preserving essential communication and useful content.
+            Configure selective blocking rules for addictive short-form loops and endless feeds while preserving essential communication, communities, and useful content.
           </p>
 
           <div class="controls-grid">
@@ -195,10 +195,74 @@
               </div>
             </article>
 
+            <!-- Active Control: X Home Timeline Blocker -->
+            <article class="control-card control-card-active">
+              <div class="control-header">
+                <span id="badge-x-home" class="control-badge badge-active">Active</span>
+                <h3 class="control-name" id="heading-x-home">X Home Timeline Blocker</h3>
+              </div>
+              <p class="control-desc">
+                Suppresses the X Home timeline while keeping direct messages, search, explore, notifications, user profiles, and individual posts accessible.
+              </p>
+
+              <div class="toggle-control-box">
+                <div class="toggle-control-info">
+                  <span class="toggle-label" id="label-settings-x-home">Block X Home Timeline</span>
+                  <span class="toggle-subtext" id="status-toggle-x-home">Currently blocking Home timeline</span>
+                </div>
+                <div class="switch-wrapper">
+                  <input
+                    type="checkbox"
+                    id="settings-toggle-x-home"
+                    class="switch-input"
+                    role="switch"
+                    aria-checked="true"
+                    aria-labelledby="label-settings-x-home"
+                    checked
+                  >
+                  <label for="settings-toggle-x-home" class="switch-track">
+                    <span class="switch-thumb" aria-hidden="true"></span>
+                  </label>
+                </div>
+              </div>
+            </article>
+
+            <!-- Active Control: Reddit Feed Blocker -->
+            <article class="control-card control-card-active">
+              <div class="control-header">
+                <span id="badge-reddit-feeds" class="control-badge badge-active">Active</span>
+                <h3 class="control-name" id="heading-reddit-feeds">Reddit Feed Blocker</h3>
+              </div>
+              <p class="control-desc">
+                Blocks endless Home, Popular, and All feeds while preserving specific subreddits, communities, discussions, individual posts, comments, search, and chat.
+              </p>
+
+              <div class="toggle-control-box">
+                <div class="toggle-control-info">
+                  <span class="toggle-label" id="label-settings-reddit-feeds">Block Reddit Feeds</span>
+                  <span class="toggle-subtext" id="status-toggle-reddit-feeds">Currently blocking feeds</span>
+                </div>
+                <div class="switch-wrapper">
+                  <input
+                    type="checkbox"
+                    id="settings-toggle-reddit-feeds"
+                    class="switch-input"
+                    role="switch"
+                    aria-checked="true"
+                    aria-labelledby="label-settings-reddit-feeds"
+                    checked
+                  >
+                  <label for="settings-toggle-reddit-feeds" class="switch-track">
+                    <span class="switch-thumb" aria-hidden="true"></span>
+                  </label>
+                </div>
+              </div>
+            </article>
+
             <!-- Planned Control: Reflective Intervention Prompts -->
             <article class="control-card">
               <div class="control-header">
-                <span class="control-badge badge-planned">Planned · Phase 6</span>
+                <span class="control-badge badge-planned">Planned · Phase 7</span>
                 <h3 class="control-name">Reflective Interventions</h3>
               </div>
               <p class="control-desc">
@@ -264,7 +328,7 @@
       <div class="footer-inner">
         <p class="footer-copy">ScrollShield &bull; Take Control. Keep What Matters.</p>
         <p class="footer-meta">
-          <span id="settings-version">Version 0.5.0</span> &bull; Manifest V3
+          <span id="settings-version">Version 0.6.0</span> &bull; Manifest V3
         </p>
       </div>
     </footer>
